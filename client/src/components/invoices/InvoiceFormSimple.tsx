@@ -140,6 +140,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   const isEditMode = !!invoiceId;
   
+  // Bandera adicional para bloquear completamente envíos de formulario durante un periodo
+  const [blockAllSubmits, setBlockAllSubmits] = useState(false);
+  
   // =============== FORMATO Y PROCESAMIENTO DE DATOS =================
   
   // Función para formatear fechas al formato YYYY-MM-DD
@@ -156,9 +159,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para procesar los impuestos adicionales
   const processAdditionalTaxes = (additionalTaxes: any): { name: string; amount: number; isPercentage: boolean }[] => {
+    console.log("🔍 Procesando impuestos adicionales:", additionalTaxes);
+    
     let result: any[] = [];
     
     if (!additionalTaxes) {
+      console.log("❌ No hay impuestos adicionales");
       return [];
     }
     
@@ -166,21 +172,46 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     if (typeof additionalTaxes === 'string') {
       try {
         result = JSON.parse(additionalTaxes);
+        console.log("✅ Impuestos parseados desde JSON:", result);
       } catch (e) {
-        console.error("Error al parsear additionalTaxes como JSON:", e);
+        console.error("❌ Error al parsear additionalTaxes como JSON:", e);
         result = [];
       }
     } 
     // Si ya es un array, lo usamos directamente
     else if (Array.isArray(additionalTaxes)) {
       result = additionalTaxes;
+      console.log("✅ Impuestos como array directo:", result);
+    }
+    // Si es un objeto simple, intentamos convertirlo
+    else if (typeof additionalTaxes === 'object') {
+      result = [additionalTaxes];
+      console.log("✅ Impuesto como objeto individual:", result);
     }
     
-    return result.map((tax: any) => ({
-      name: tax.name || "",
-      amount: Number(tax.amount || 0),
-      isPercentage: tax.isPercentage !== undefined ? tax.isPercentage : false
-    }));
+    const processed = result.map((tax: any) => {
+      let amount = Number(tax.amount || 0);
+      const name = tax.name || "";
+      const isPercentage = tax.isPercentage !== undefined ? tax.isPercentage : false;
+      
+      // IMPORTANTE: Si es IRPF y el valor es positivo, convertirlo a negativo
+      if (name.toLowerCase().includes('irpf') && amount > 0) {
+        amount = -Math.abs(amount);
+        console.log(`🔧 Corrigiendo IRPF: ${tax.amount} → ${amount}`);
+      }
+      
+      const processedTax = {
+        name,
+        amount,
+        isPercentage
+      };
+      
+      console.log(`🏷️ Procesado impuesto: ${processedTax.name} = ${processedTax.amount}${processedTax.isPercentage ? '%' : '€'}`);
+      return processedTax;
+    });
+    
+    console.log("✅ Impuestos procesados finalmente:", processed);
+    return processed;
   };
   
   // Función para procesar los items de la factura
@@ -213,6 +244,8 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       const { invoice, items } = initialData;
       const processedItems = processInvoiceItems(items);
       
+      console.log("📝 Preparando datos para edición de factura:", invoice.id);
+      
       return {
         ...invoice,
         invoiceNumber: invoice.invoiceNumber || "",
@@ -221,9 +254,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         dueDate: formatDateForInput(invoice.dueDate),
         status: invoice.status || "pending",
         notes: invoice.notes || "",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.tax || 0),
-        total: Number(invoice.total || 0),
+        // NO usar los totales precalculados de la BD, dejar que el formulario los calcule
+        subtotal: 0, // Se calculará automáticamente
+        tax: 0, // Se calculará automáticamente
+        total: 0, // Se calculará automáticamente
         items: processedItems,
         additionalTaxes: processAdditionalTaxes(invoice.additionalTaxes)
       };
@@ -291,7 +325,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para calcular los totales del formulario (usando valores actuales)
   const calculateTotals = () => {
-    const { items = [], additionalTaxes = [], subtotal: userSubmittedSubtotal } = form.getValues();
+    const { items = [], additionalTaxes = [] } = form.getValues();
     
     // Calculamos subtotales de cada item
     const updatedItems = (items || []).map((item: any) => {
@@ -306,20 +340,14 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       };
     });
     
-    // Calculamos subtotal de la factura solo si no hay un valor específico ingresado por el usuario
-    // Esto permite al usuario sobrescribir el subtotal calculado si lo desea
-    let subtotal;
-    if (userSubmittedSubtotal !== undefined && userSubmittedSubtotal !== null && userSubmittedSubtotal !== 0) {
-      // Usamos el subtotal ingresado por el usuario
-      subtotal = toNumber(userSubmittedSubtotal);
-      console.log("✅ Respetando valor de base imponible ingresado por el usuario:", subtotal);
-    } else {
-      // Calculamos el subtotal a partir de los ítems
-      subtotal = updatedItems.reduce(
-        (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
-        0
-      );
-    }
+    // SIEMPRE calculamos el subtotal a partir de los ítems para que sea reactivo
+    // Esto permite que los totales se recalculen automáticamente cuando cambian cantidades/precios
+    const subtotal = updatedItems.reduce(
+      (sum: number, item: any) => sum + toNumber(item.subtotal, 0),
+      0
+    );
+    
+    console.log("📐 Subtotal calculado desde items:", subtotal);
     
     // Calculamos IVA basado en la tasa de cada item
     const tax = updatedItems.reduce((sum: number, item: any) => {
@@ -327,31 +355,66 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       return sum + itemTax;
     }, 0);
     
-    // Calculamos impuestos adicionales
+    // Calculamos impuestos adicionales correctamente
     let additionalTaxesTotal = 0;
     (additionalTaxes || []).forEach((taxItem: any) => {
+      let taxAmount;
       if (taxItem.isPercentage) {
-        const percentageTax = subtotal * (toNumber(taxItem.amount, 0) / 100);
-        additionalTaxesTotal += percentageTax;
+        // Para porcentajes, usar el valor exacto del amount (que puede ser negativo)
+        taxAmount = subtotal * (taxItem.amount / 100);
       } else {
-        additionalTaxesTotal += toNumber(taxItem.amount, 0);
+        // Para valores fijos, usar el valor directamente
+        taxAmount = Number(taxItem.amount);
       }
+      
+      additionalTaxesTotal += taxAmount;
+      
+      // Debug log para ver qué está pasando
+      console.log(`💰 Impuesto ${taxItem.name}: ${taxItem.amount}${taxItem.isPercentage ? '%' : '€'} = ${taxAmount.toFixed(2)}€`);
     });
     
     // Total final con todos los impuestos
     const total = subtotal + tax + additionalTaxesTotal;
+    
+    console.log(`📊 Cálculo final: ${subtotal} + ${tax.toFixed(2)} + ${additionalTaxesTotal.toFixed(2)} = ${total.toFixed(2)}`);
     
     return {
       updatedItems,
       subtotal,
       tax,
       additionalTaxesTotal,
-      total // Permitimos valores negativos para el total
+      total
     };
   };
   
-  // Usamos useMemo para memorizar los totales calculados (solo se recalcula cuando form cambia)
-  const calculatedTotals = useMemo(calculateTotals, [form]);
+  // Usamos useMemo para memorizar los totales calculados y watch para detectar TODOS los cambios
+  const allFormValues = form.watch(); // Observa TODOS los cambios del formulario
+  
+  const calculatedTotals = useMemo(() => {
+    const result = calculateTotals();
+    console.log("🔄 Recalculando totales:", result);
+    return result;
+  }, [allFormValues]); // Dependemos de todos los valores del formulario
+
+  // Efecto para recalcular totales cuando cambian los datos relevantes
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      console.log("👀 Detectado cambio en:", name, "tipo:", type);
+      
+      // Solo recalcular para cambios relevantes
+      if (name?.includes("items") || name?.includes("additionalTaxes") || name?.includes("quantity") || name?.includes("unitPrice")) {
+        console.log("🔄 Forzando recálculo por cambio relevante");
+        // Forzar recálculo actualizando los valores calculados en el formulario
+        setTimeout(() => {
+          const newTotals = calculateTotals();
+          form.setValue("subtotal", newTotals.subtotal, { shouldValidate: false });
+          form.setValue("tax", newTotals.tax, { shouldValidate: false });
+          form.setValue("total", newTotals.total, { shouldValidate: false });
+        }, 10);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // =============== MANEJADORES DE EVENTOS =================
   
@@ -370,6 +433,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           amount: -15, 
           isPercentage: true 
         });
+        console.log("➕ Añadido IRPF -15%");
       }
     } else if (taxType === 'iva') {
       // Verificar si ya existe un impuesto IVA adicional
@@ -380,14 +444,21 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           amount: 21, 
           isPercentage: true 
         });
+        console.log("➕ Añadido IVA adicional 21%");
       }
     } else {
       setNewTaxData({ name: "", amount: 0, isPercentage: false });
       setShowTaxDialog(true);
     }
     
-    // Recalcular totales después de añadir impuestos
-    setTimeout(() => calculateTotals(), 50);
+    // Forzar recálculo inmediato
+    setTimeout(() => {
+      const newTotals = calculateTotals();
+      form.setValue("subtotal", newTotals.subtotal, { shouldValidate: false });
+      form.setValue("tax", newTotals.tax, { shouldValidate: false });
+      form.setValue("total", newTotals.total, { shouldValidate: false });
+      console.log("🔄 Totales recalculados después de añadir impuesto");
+    }, 100);
   };
   
   // Función para agregar impuesto desde el diálogo
@@ -409,8 +480,15 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     }
     
     setShowTaxDialog(false);
-    // Recalcular totales después de añadir impuestos
-    setTimeout(() => calculateTotals(), 50);
+    
+    // Forzar recálculo inmediato
+    setTimeout(() => {
+      const newTotals = calculateTotals();
+      form.setValue("subtotal", newTotals.subtotal, { shouldValidate: false });
+      form.setValue("tax", newTotals.tax, { shouldValidate: false });
+      form.setValue("total", newTotals.total, { shouldValidate: false });
+      console.log("🔄 Totales recalculados después de añadir impuesto personalizado");
+    }, 100);
   };
   
   // Función para manejar el evento onBlur en campos numéricos
@@ -421,6 +499,21 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         field.onChange(numericValue.toString());
       }
     };
+  };
+  
+  // Función para eliminar un impuesto y recalcular
+  const handleRemoveTax = (index: number) => {
+    removeTax(index);
+    console.log(`➖ Eliminado impuesto en índice ${index}`);
+    
+    // Forzar recálculo inmediato
+    setTimeout(() => {
+      const newTotals = calculateTotals();
+      form.setValue("subtotal", newTotals.subtotal, { shouldValidate: false });
+      form.setValue("tax", newTotals.tax, { shouldValidate: false });
+      form.setValue("total", newTotals.total, { shouldValidate: false });
+      console.log("🔄 Totales recalculados después de eliminar impuesto");
+    }, 100);
   };
   
   // Función para manejar la subida de archivos
@@ -677,9 +770,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     },
   });
   
-  // Bandera adicional para bloquear completamente envíos de formulario durante un periodo
-  const [blockAllSubmits, setBlockAllSubmits] = useState(false);
-  
   // Escuchar eventos personalizados de prevención de envío automático
   useEffect(() => {
     const preventFormSubmitHandler = () => {
@@ -761,9 +851,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     const hasTaxes = calculatedTotals.tax > 0 || (data.additionalTaxes && data.additionalTaxes.length > 0);
     
     // Verificamos si tiene razón de exención fiscal
-    const hasExemptionReason = data.notes?.toLowerCase().includes('exención') || 
-                              data.notes?.toLowerCase().includes('exento') ||
-                              data.notes?.toLowerCase().includes('no sujeto');
+    const hasExemptionReason = (data.notes?.toLowerCase().includes('exención') === true) || 
+                              (data.notes?.toLowerCase().includes('exento') === true) ||
+                              (data.notes?.toLowerCase().includes('no sujeto') === true);
     
     // Verificamos si tiene fecha de factura válida
     const hasDate = !!data.issueDate;
@@ -779,13 +869,31 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Función para manejar el botón de envío
   const handleSubmitButtonClick = () => {
+    console.log("🔘 Click en botón de envío (modo:", isEditMode ? "edición" : "creación", ")");
+    
     // Verificamos los datos de la factura
     const validity = verifyInvoiceValidity();
+    console.log("📋 Validación:", validity);
     
     // Si el formulario es válido, procedemos con el envío
     if (validity.hasClient && validity.hasAmount && (validity.hasTaxes || validity.hasExemptionReason) && validity.hasDate) {
+      console.log("✅ Validación pasada, enviando formulario");
       setUserInitiatedSubmit(true);
+      
+      // Llamar a handleSubmit directamente con los datos del formulario
+      const formData = form.getValues();
+      
+      // En modo edición, llamamos inmediatamente
+      if (isEditMode) {
+        handleSubmit(formData);
+      } else {
+        // En modo creación, usamos un pequeño delay
+        setTimeout(() => {
+          handleSubmit(formData);
+        }, 50);
+      }
     } else {
+      console.log("❌ Validación fallida, mostrando diálogo");
       // Mostramos diálogo de validación
       setShowValidation(true);
     }
@@ -793,6 +901,9 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
   
   // Manejar submit del formulario
   const handleSubmit = (data: InvoiceFormValues) => {
+    console.log("🚀 handleSubmit ejecutado con datos:", data);
+    console.log("🔍 Estado actual - userInitiatedSubmit:", userInitiatedSubmit, "blockAllSubmits:", blockAllSubmits);
+    
     // Si el modal de cliente está abierto, evitamos enviar el formulario de factura
     if (showClientForm) {
       console.log("⚠️ Modal de cliente abierto, ignorando submit de factura");
@@ -813,9 +924,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
       return;
     }
     
-    // Verificamos si el envío fue iniciado explícitamente por el usuario o es un envío automático
-    if (!userInitiatedSubmit) {
-      console.log("⚠️ Detectado envío automático del formulario, bloqueando...");
+    // En modo edición, relajamos las validaciones de envío automático
+    if (!isEditMode && !userInitiatedSubmit) {
+      console.log("⚠️ Modo creación: Detectado envío automático del formulario, bloqueando...");
+      console.log("userInitiatedSubmit actual:", userInitiatedSubmit);
       
       // Prevenimos el envío automático, pero guardamos los datos actuales para referencia
       const currentFormData = form.getValues();
@@ -827,14 +939,14 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         description: "Por favor, complete todos los datos de la factura y después pulse 'Crear Factura'",
       });
       
-      // Marcamos este evento como procesado para evitar procesamientos adicionales
-      setTimeout(() => setUserInitiatedSubmit(false), 100);
       return;
     }
     
+    console.log("✅ Verificaciones de seguridad pasadas (modo:", isEditMode ? "edición" : "creación", ")");
+    
     // Verificamos que tengamos datos mínimos para crear una factura válida
     if (!data.clientId) {
-      console.log("⚠️ No se puede crear factura sin cliente");
+      console.log("⚠️ No se puede procesar factura sin cliente");
       toast({
         title: "Cliente requerido",
         description: "Debes seleccionar un cliente para la factura",
@@ -846,7 +958,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     
     if (!data.items || data.items.length === 0 || 
         !data.items.some(item => item.description && (item.quantity > 0 || item.unitPrice > 0))) {
-      console.log("⚠️ No se puede crear factura sin líneas de concepto válidas");
+      console.log("⚠️ No se puede procesar factura sin líneas de concepto válidas");
       toast({
         title: "Conceptos requeridos",
         description: "Añade al menos un concepto a la factura con descripción e importe",
@@ -861,13 +973,15 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
     data.tax = calculatedTotals.tax;
     data.total = calculatedTotals.total;
     
-    console.log("✅ Enviando datos de factura", data);
+    console.log("✅ Enviando datos de factura (modo: " + (isEditMode ? "edición" : "creación") + ")", data);
     
     // Enviar datos
     mutation.mutate(data);
     
-    // Resetear la bandera después de enviar
-    setUserInitiatedSubmit(false);
+    // Resetear la bandera después de enviar SOLO si no estamos en modo edición
+    if (!isEditMode) {
+      setUserInitiatedSubmit(false);
+    }
   };
 
   // =============== DATOS DE LA APLICACIÓN =================
@@ -948,13 +1062,6 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         <FormLabel>Cliente</FormLabel>
                         <div className="flex gap-2 items-start">
                           <div className="flex-1">
-                            <div className="mb-2 p-2.5 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-sm">
-                              <p className="flex items-center">
-                                <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
-                                <strong>Recomendación:</strong> Crea primero tus clientes en la sección &quot;Clientes&quot; antes de hacer facturas.
-                              </p>
-                            </div>
-                            
                             <Select
                               onValueChange={(value) => {
                                 field.onChange(Number(value));
@@ -1472,8 +1579,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                       <tbody className="divide-y divide-gray-200">
                         {taxFields.map((field, index) => {
                           const taxItem = form.getValues(`additionalTaxes.${index}`);
-                          const isPercentage = taxItem?.isPercentage;
-                          const amount = toNumber(taxItem?.amount, 0);
+                          if (!taxItem) return null;
+                          
+                          const isPercentage = taxItem.isPercentage === true;
+                          const amount = toNumber(taxItem.amount, 0);
                           const subtotal = calculatedTotals.subtotal;
                           const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
                           const sign = amount < 0 ? "-" : "+";
@@ -1494,7 +1603,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                                   variant="ghost"
                                   size="sm"
                                   className="p-0 h-7 w-7"
-                                  onClick={() => removeTax(index)}
+                                  onClick={() => handleRemoveTax(index)}
                                 >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
@@ -1534,7 +1643,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                         const taxItem = form.getValues(`additionalTaxes.${index}`);
                         if (!taxItem) return null;
                         
-                        const isPercentage = taxItem.isPercentage;
+                        const isPercentage = taxItem.isPercentage === true;
                         const amount = toNumber(taxItem.amount, 0);
                         const subtotal = calculatedTotals.subtotal;
                         const taxValue = isPercentage ? (amount * subtotal / 100) : amount;
@@ -1595,7 +1704,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <FormLabel htmlFor="tax-name">Nombre</FormLabel>
+              <label htmlFor="tax-name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Nombre</label>
               <Input 
                 id="tax-name" 
                 placeholder="IRPF, IVA, etc." 
@@ -1604,7 +1713,7 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
               />
             </div>
             <div className="space-y-2">
-              <FormLabel htmlFor="tax-amount">Importe</FormLabel>
+              <label htmlFor="tax-amount" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Importe</label>
               <Input 
                 id="tax-amount" 
                 type="number" 
@@ -1618,10 +1727,10 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
                 type="checkbox"
                 id="is-percentage"
                 className="h-4 w-4"
-                checked={newTaxData.isPercentage}
+                checked={newTaxData.isPercentage === true}
                 onChange={e => setNewTaxData({...newTaxData, isPercentage: e.target.checked})}
               />
-              <FormLabel htmlFor="is-percentage" className="!m-0">Es un porcentaje</FormLabel>
+              <label htmlFor="is-percentage" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Es un porcentaje</label>
             </div>
           </div>
           <DialogFooter>
@@ -1688,14 +1797,12 @@ const InvoiceFormSimple = ({ invoiceId, initialData }: InvoiceFormProps) => {
         }}
         hasClient={!!form.getValues().clientId}
         hasAmount={calculatedTotals.subtotal > 0}
-        hasTaxes={calculatedTotals.tax > 0 || (form.getValues().additionalTaxes?.length > 0)}
+        hasTaxes={calculatedTotals.tax > 0 || (form.getValues().additionalTaxes?.length || 0) > 0}
         hasExemptionReason={
-          form.getValues().notes?.toLowerCase().includes('exención') || 
-          form.getValues().notes?.toLowerCase().includes('exento') ||
-          form.getValues().notes?.toLowerCase().includes('no sujeto')
+          (form.getValues().notes?.toLowerCase().includes('exención') === true) || 
+          (form.getValues().notes?.toLowerCase().includes('exento') === true) ||
+          (form.getValues().notes?.toLowerCase().includes('no sujeto') === true)
         }
-        hasDate={!!form.getValues().issueDate}
-        inProgress={mutation.isPending}
       />
     </>
   );

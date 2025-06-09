@@ -30,7 +30,7 @@ export const authFixer = (req: Request, res: Response, next: NextFunction) => {
     }
     
     // 4. Si el usuario está autenticado con Passport, usar su ID
-    if (req.isAuthenticated() && req.user) {
+    if (typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
       if (req.session) {
         req.session.userId = userId;
@@ -42,7 +42,8 @@ export const authFixer = (req: Request, res: Response, next: NextFunction) => {
     // 5. Para desarrollo, usar usuario demo solo si realmente no hay un usuario autenticado
     if (process.env.NODE_ENV !== 'production') {
       // Solo usar el bypass si realmente no hay un usuario autenticado
-      if (!req.isAuthenticated() && !req.user) {
+      const isPassportAuth = (typeof req.isAuthenticated === 'function') ? req.isAuthenticated() : false;
+      if (!isPassportAuth && !req.user) {
         if (req.session) {
           req.session.userId = 1; // ID del usuario demo
           console.log(`🔐 Autenticación forzada con usuario demo (ID=1) para: ${req.path}`);

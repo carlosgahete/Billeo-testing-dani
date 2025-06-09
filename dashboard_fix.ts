@@ -130,18 +130,68 @@ app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response)
       }
       
       // 5. Gastos
-      // Calculamos los gastos como la suma de los importes de transacciones de gastos
+      // CORREGIDO: Obtener los datos fiscales reales de la tabla expenses cuando estén disponibles
       const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense');
-      const expenses = expenseTransactions.reduce((sum, t) => {
-        const amount = parseFloat(t.amount || '0');
-        return isNaN(amount) ? sum : sum + amount;
-      }, 0);
       
-      // 6. Base imponible de gastos (estimada como 100/121 del total)
-      const baseImponibleGastos = expenses / 1.21;
+      // Intentar obtener datos fiscales detallados de la tabla expenses
+      let realFiscalExpenseData = [];
+      try {
+        const { db } = await import('./db');
+        const { expenses: expensesTable } = await import('../shared/enhanced-schema');
+        const { eq } = await import('drizzle-orm');
+        
+        realFiscalExpenseData = await db
+          .select()
+          .from(expensesTable)
+          .where(eq(expensesTable.userId, userId));
+          
+        devLog(`Datos fiscales encontrados: ${realFiscalExpenseData.length} registros`);
+      } catch (e) {
+        devLog("No se pudieron obtener datos fiscales detallados, usando estimación");
+      }
       
-      // 7. IVA soportado (de gastos)
-      const ivaSoportado = expenses - baseImponibleGastos;
+      // Calcular gastos usando datos fiscales reales cuando estén disponibles
+      let expenses = 0;
+      let baseImponibleGastos = 0;
+      let ivaSoportado = 0;
+      let irpfGastos = 0;
+      
+      for (const expenseTransaction of expenseTransactions) {
+        // Buscar datos fiscales específicos para esta transacción
+        const fiscalData = realFiscalExpenseData.find(
+          expense => expense.transactionId === expenseTransaction.id
+        );
+        
+        if (fiscalData) {
+          // Usar datos fiscales reales
+          const netAmount = parseFloat(fiscalData.netAmount || '0');
+          const vatAmount = parseFloat(fiscalData.vatAmount || '0');
+          const irpfAmount = parseFloat(fiscalData.irpfAmount || '0');
+          const totalAmount = parseFloat(fiscalData.totalAmount || '0');
+          
+          baseImponibleGastos += netAmount;
+          ivaSoportado += vatAmount;
+          irpfGastos += irpfAmount;
+          expenses += totalAmount;
+          
+          devLog(`Gasto ID ${expenseTransaction.id}: Base=${netAmount}€, IVA=${vatAmount}€, IRPF=${irpfAmount}€, Total=${totalAmount}€`);
+        } else {
+          // Fallback: usar el importe total de la transacción y estimar
+          const amount = parseFloat(expenseTransaction.amount || '0');
+          expenses += amount;
+          
+          // Estimación simple (solo si no hay datos fiscales)
+          const estimatedBase = amount / 1.21;
+          const estimatedVat = amount - estimatedBase;
+          
+          baseImponibleGastos += estimatedBase;
+          ivaSoportado += estimatedVat;
+          
+          devLog(`Gasto ID ${expenseTransaction.id} (estimado): Base=${estimatedBase.toFixed(2)}€, IVA=${estimatedVat.toFixed(2)}€, Total=${amount}€`);
+        }
+      }
+      
+      devLog(`TOTALES GASTOS: Base=${baseImponibleGastos.toFixed(2)}€, IVA=${ivaSoportado.toFixed(2)}€, IRPF=${irpfGastos.toFixed(2)}€, Total=${expenses.toFixed(2)}€`);
       
       // 8. IRPF retenido (en ingresos)
       let irpfRetenidoIngresos = 0;
@@ -168,8 +218,8 @@ app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response)
         }
       }
       
-      // 9. IRPF de gastos
-      let totalIrpfFromExpensesInvoices = 0;
+      // 9. IRPF de gastos - CORREGIDO: usar el valor real calculado
+      const totalIrpfFromExpensesInvoices = irpfGastos;
       
       // 10. Balance de IVA
       const vatBalance = ivaRepercutido - ivaSoportado;
@@ -262,6 +312,7 @@ app.get("/api/stats/dashboard", requireAuth, async (req: Request, res: Response)
         ivaRepercutido: safeNumber(ivaRepercutido),
         ivaSoportado: safeNumber(ivaSoportado),
         irpfRetenidoIngresos: safeNumber(irpfRetenidoIngresos),
+        irpfGastos: safeNumber(irpfGastos),
         
         // Datos para filtrado
         period,

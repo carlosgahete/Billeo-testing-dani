@@ -1,9 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { Express } from 'express';
 import { storage } from './storage';
-import { eq } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { db } from './db';
-import { dashboardState } from '../shared/schema';
+import { dashboardState, transactions, categories, invoices } from '../shared/schema';
+import { expenses } from "../shared/enhanced-schema";
+
+// Función auxiliar para formatear moneda
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(amount);
+}
 
 // Interfaz para impuestos adicionales
 interface AdditionalTax {
@@ -263,28 +272,123 @@ export function registerDirectDashboardEndpoint(app: Express) {
         ivaRepercutido = invoiceIncome * 0.21;
       }
       
-      // 5. Gastos
+      // 5. Gastos - CORREGIDO: Usar datos fiscales reales cuando estén disponibles
       const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense');
       
       let totalBaseImponibleGastos = 0;
       let totalIvaSoportado = 0;
       let totalIrpfGastos = 0;
+      let totalExpenses = 0; // Total de gastos (incluye IVA)
       
-      // Procesar cada transacción de gasto
+      // NUEVOS CÁLCULOS FISCALES ESPECÍFICOS
+      let totalGastosDeducibles = 0;      // Cifra neta de gastos que sean deducibles
+      let totalIvaDeducible = 0;          // IVA soportado que sea deducible
+      
+      console.log(`📊 Procesando ${expenseTransactions.length} transacciones de gastos para cálculos fiscales específicos`);
+      
+      // Obtener gastos directamente de la tabla expenses (gastos con datos fiscales detallados)
+      let expenseRecords: any[] = [];
+      try {
+        expenseRecords = await db
+          .select()
+          .from(expenses)
+          .where(eq(expenses.userId, userId));
+        console.log(`📊 Encontrados ${expenseRecords.length} gastos en la tabla expenses con datos fiscales detallados`);
+        
+        // LOG DETALLADO: Mostrar todos los registros de gastos encontrados
+        expenseRecords.forEach((record, index) => {
+          console.log(`📊 Gasto ${index + 1}:`, {
+            transactionId: record.transactionId,
+            netAmount: record.netAmount,
+            vatAmount: record.vatAmount,
+            irpfAmount: record.irpfAmount,
+            totalAmount: record.totalAmount,
+            vatDeductiblePercent: record.vatDeductiblePercent,
+            deductiblePercent: record.deductiblePercent
+          });
+        });
+      } catch (error) {
+        console.log(`❌ Error obteniendo gastos de la tabla expenses:`, (error as Error).message);
+        expenseRecords = [];
+      }
+      
+      // Procesar cada transacción de gasto para calcular correctamente
       for (const transaction of expenseTransactions) {
         try {
-          const totalAmount = parseFloat(transaction.amount || '0');
+          // Buscar datos fiscales específicos para esta transacción
+          const fiscalData = expenseRecords.find(expense => expense.transactionId === transaction.id);
           
-          let baseAmount = totalAmount;
-          let ivaAmount = 0;
-          let irpfAmount = 0;
-          
-          // Simplificado para debug
-          totalBaseImponibleGastos += baseAmount;
+          if (fiscalData) {
+            // Usar datos fiscales reales
+            const netAmount = parseFloat(fiscalData.netAmount || '0');
+            const vatAmount = parseFloat(fiscalData.vatAmount || '0');
+            const irpfAmount = parseFloat(fiscalData.irpfAmount || '0');
+            const totalAmount = parseFloat(fiscalData.totalAmount || '0');
+            const vatDeductiblePercent = parseFloat(fiscalData.vatDeductiblePercent || '100');
+            const deductiblePercent = parseFloat(fiscalData.deductiblePercent || '100');
+            
+            // LOGS DETALLADOS DE CADA CAMPO
+            console.log(`📊 GASTO ${transaction.id} - Datos raw de la BD:`, {
+              netAmount: fiscalData.netAmount,
+              vatAmount: fiscalData.vatAmount,
+              irpfAmount: fiscalData.irpfAmount,
+              totalAmount: fiscalData.totalAmount,
+              vatDeductiblePercent: fiscalData.vatDeductiblePercent,
+              deductiblePercent: fiscalData.deductiblePercent
+            });
+            
+            console.log(`📊 GASTO ${transaction.id} - Datos parseados:`, {
+              netAmount,
+              vatAmount,
+              irpfAmount,
+              totalAmount,
+              vatDeductiblePercent,
+              deductiblePercent
+            });
+            
+            totalBaseImponibleGastos += netAmount;
+            totalIvaSoportado += vatAmount;
+            totalIrpfGastos += irpfAmount;
+            totalExpenses += totalAmount;
+            
+            // CORREGIDO: Aplicar porcentajes de deducibilidad reales
+            const gastosDeduciblesCalculado = netAmount * (deductiblePercent / 100);
+            const ivaDeducibleCalculado = vatAmount * (vatDeductiblePercent / 100);
+            
+            totalGastosDeducibles += gastosDeduciblesCalculado;
+            totalIvaDeducible += ivaDeducibleCalculado;
+            
+            console.log(`📊 GASTO ${transaction.id} - Cálculos de deducibilidad:`, {
+              gastosDeduciblesCalculado,
+              ivaDeducibleCalculado,
+              deductiblePercent,
+              vatDeductiblePercent
+            });
+            
+            console.log(`📊 Gasto ID ${transaction.id} (datos fiscales): Base=${netAmount}€, IVA=${vatAmount}€, IRPF=${irpfAmount}€, Total=${totalAmount}€`);
+            console.log(`📊 Gasto ID ${transaction.id} (deducibilidad): BaseDeducible=${gastosDeduciblesCalculado}€, IVADeducible=${ivaDeducibleCalculado}€`);
+          } else {
+            // Fallback: usar el importe total de la transacción y estimar
+            const amount = parseFloat(transaction.amount || '0');
+            totalExpenses += amount;
+            
+            // Estimación simple (solo si no hay datos fiscales)
+            const estimatedBase = amount / 1.21;
+            const estimatedVat = amount - estimatedBase;
+            
+            totalBaseImponibleGastos += estimatedBase;
+            totalIvaSoportado += estimatedVat;
+            totalGastosDeducibles += estimatedBase;
+            totalIvaDeducible += estimatedVat;
+            
+            console.log(`📊 Gasto ID ${transaction.id} (estimado): Base=${estimatedBase.toFixed(2)}€, IVA=${estimatedVat.toFixed(2)}€, Total=${amount}€`);
+          }
         } catch (error) {
-          console.error("Error procesando gasto:", error);
+          console.error(`❌ Error procesando transacción ${transaction.id}:`, error);
         }
       }
+      
+      console.log(`📊 TOTALES GASTOS: Base=${totalBaseImponibleGastos.toFixed(2)}€, IVA=${totalIvaSoportado.toFixed(2)}€, IRPF=${totalIrpfGastos.toFixed(2)}€, Total=${totalExpenses.toFixed(2)}€`);
       
       // 6. Base imponible gastos
       const baseImponibleGastos = totalBaseImponibleGastos;
@@ -418,12 +522,20 @@ export function registerDirectDashboardEndpoint(app: Express) {
         ivaRepercutido: Math.round(ivaRepercutido),
         ivaSoportado: Math.round(ivaSoportado),
         irpfRetenidoIngresos: Math.round(irpfRetenidoIngresos),
+        irpfGastos: Math.round(totalIrpfGastos),
         period: period || 'all',
         year,
         totalWithholdings: Math.round(irpfTotal),
         netIncome: Math.round(baseImponible),
         netExpenses: Math.round(baseImponibleGastos),
         netResult: Math.round(resultado),
+        
+        // NUEVOS CAMPOS FISCALES ESPECÍFICOS
+        gastosDeducibles: Math.round(totalGastosDeducibles),      // Cifra neta de gastos deducibles
+        ivaDeducible: Math.round(totalIvaDeducible),             // IVA soportado deducible
+        resultadoFiscal: Math.round(baseImponible - totalGastosDeducibles), // Resultado: neto ingresos - neto gastos deducibles
+        ivaAIngresar: Math.round(ivaRepercutido - totalIvaDeducible),        // IVA a ingresar: IVA ingresos - IVA deducible
+        
         taxes: { 
           vat: Math.round(ivaALiquidar), 
           incomeTax: Math.round(irpfTotal), 
@@ -435,7 +547,13 @@ export function registerDirectDashboardEndpoint(app: Express) {
           ivaLiquidar: Math.round(ivaALiquidar),
           irpfRetenido: Math.round(irpfRetenidoIngresos),
           irpfTotal: Math.round(irpfTotal),
-          irpfPagar: Math.round(irpfTotal - irpfRetenidoIngresos)
+          irpfPagar: Math.round(irpfTotal - irpfRetenidoIngresos),
+          
+          // NUEVOS CAMPOS EN TAX STATS
+          gastosDeducibles: Math.round(totalGastosDeducibles),
+          ivaDeducible: Math.round(totalIvaDeducible),
+          resultadoFiscal: Math.round(baseImponible - totalGastosDeducibles),
+          ivaAIngresar: Math.round(ivaRepercutido - totalIvaDeducible)
         },
         issuedCount,
         invoices: {

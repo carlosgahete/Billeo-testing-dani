@@ -172,6 +172,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     const baseImponibleGastos = stats.expenses || 0;
     const ivaSoportado = stats.ivaSoportado || 0;
     
+    // NUEVOS CÁLCULOS FISCALES ESPECÍFICOS
+    // 1. Gastos netos deducibles (usar datos específicos o asumir 100% deducible)
+    const gastosDeducibles = stats.gastosDeducibles || baseImponibleGastos;
+    
+    // 2. IVA soportado deducible (usar datos específicos o asumir 100% deducible)  
+    const ivaDeducible = stats.ivaDeducible || ivaSoportado;
+    
+    // 3. Resultado fiscal: neto ingresos - neto gastos deducibles
+    const resultadoFiscal = baseImponibleIngresos - gastosDeducibles;
+    
+    // 4. IVA a ingresar: IVA de ingresos - IVA deducible de gastos
+    const ivaAIngresar = ivaRepercutido - ivaDeducible;
+    
     // Resultado total (diferencia entre ingresos y gastos)
     const finalResult = baseImponibleIngresos - baseImponibleGastos;
     
@@ -179,13 +192,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     const ivaALiquidar = stats.taxes?.ivaALiquidar || 0;
     const retencionesIrpf = stats.irpfRetenidoIngresos || 0;
     const irpfRetenciones = stats.totalWithholdings || 0;
+    const irpfGastos = stats.irpfGastos || 0; // NUEVO: IRPF de gastos
     
-    console.log("🔄 Recalculando valores del dashboard:", {
+    console.log("🔄 Recalculando valores fiscales del dashboard:", {
       income: stats.income,
       expenses: stats.expenses,
       baseImponibleIngresos,
       baseImponibleGastos,
-      finalResult
+      gastosDeducibles,
+      ivaDeducible,
+      resultadoFiscal,
+      ivaAIngresar,
+      finalResult,
+      irpfGastos // NUEVO: incluir en los logs
     });
     
     return {
@@ -193,10 +212,15 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
       ivaRepercutido,
       baseImponibleGastos,
       ivaSoportado,
+      gastosDeducibles,      // NUEVO: Gastos netos deducibles
+      ivaDeducible,          // NUEVO: IVA soportado deducible
+      resultadoFiscal,       // NUEVO: Resultado fiscal
+      ivaAIngresar,          // NUEVO: IVA a ingresar
       finalResult,
       ivaALiquidar,
       retencionesIrpf,
-      irpfRetenciones
+      irpfRetenciones,
+      irpfGastos             // NUEVO: IRPF de gastos
     };
   }, [stats]);
   
@@ -206,10 +230,15 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
     ivaRepercutido,
     baseImponibleGastos,
     ivaSoportado,
+    gastosDeducibles,
+    ivaDeducible,
+    resultadoFiscal,
+    ivaAIngresar,
     finalResult,
     ivaALiquidar,
     retencionesIrpf,
-    irpfRetenciones
+    irpfRetenciones,
+    irpfGastos
   } = calculatedValues;
   
   // Comprobar signos y valores para colores
@@ -606,19 +635,19 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <ArrowDown className="md:h-5 md:w-5 h-4 w-4 text-[#FF3B30]" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Gastos Deducibles</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible deducible</p>
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#FF3B30]">{formatCurrency(baseImponibleGastos)}</div>
-              <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaSoportado)}</div>
-              <div className="text-sm text-gray-500">Total con IVA: {formatCurrency(baseImponibleGastos + ivaSoportado)}</div>
+              <div className="text-3xl md:text-4xl font-bold mb-1 text-[#FF3B30]">{formatCurrency(gastosDeducibles)}</div>
+              <div className="text-sm text-gray-500">IVA soportado: {formatCurrency(ivaDeducible)}</div>
+              <div className="text-sm text-gray-500">IRPF de gastos: {formatCurrency(irpfGastos)}</div>
             </div>
           </div>
         </div>
 
-        {/* Widget de Resultado - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
+        {/* Widget de Resultado Fiscal - Estilo Apple - Col-span-1 en móvil, normal en tablet/desktop */}
         <div className="dashboard-card fade-in -mx-2 sm:mx-0 px-0 col-span-1 border-t-4 border-t-blue-500">
           <div className="md:p-6 p-3 sm:p-1">
             <div className="flex items-center md:mb-5 mb-2">
@@ -626,16 +655,16 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <PiggyBank className="md:h-5 md:w-5 h-4 w-4 text-blue-600" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Base imponible (sin IVA)</p>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resultado Fiscal</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Ingresos - Gastos deducibles</p>
               </div>
             </div>
             <div className="flex flex-col">
               <div className="text-3xl md:text-4xl font-bold mb-1 text-blue-600">
-                {formatCurrency(baseImponibleIngresos - baseImponibleGastos)}
+                {formatCurrency(resultadoFiscal)}
               </div>
-              <div className="text-sm text-gray-500">IVA a liquidar: {formatCurrency(ivaALiquidar)}</div>
-              <div className="text-sm text-gray-500">Retenciones IRPF: {formatCurrency(retencionesIrpf)}</div>
+              <div className="text-sm text-gray-500">IVA a ingresar: {formatCurrency(ivaAIngresar)}</div>
+              <div className="text-sm text-gray-500">IRPF de gastos: {formatCurrency(irpfGastos)}</div>
             </div>
           </div>
         </div>
@@ -697,18 +726,22 @@ const CompleteDashboard: React.FC<CompleteDashboardProps> = ({ className }) => {
                 <Calculator className="md:h-5 md:w-5 h-4 w-4 text-emerald-600" strokeWidth={1.5} />
               </div>
               <div>
-                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Impuestos</h3>
-                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Resumen fiscal</p>
+                <h3 className="md:text-lg text-base font-medium text-gray-800 mb-0 leading-tight">Resumen Fiscal</h3>
+                <p className="md:text-sm text-xs text-gray-500 mt-0 leading-tight">Información fiscal deducible</p>
               </div>
             </div>
             <div className="flex flex-col mt-2">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-base text-gray-700 font-medium">IVA a liquidar:</span>
-                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(stats.taxes?.ivaALiquidar || 0)}</span>
+                <span className="text-base text-gray-700 font-medium">Beneficio:</span>
+                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(resultadoFiscal)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-base text-gray-700 font-medium">IVA a ingresar:</span>
+                <span className="text-lg font-semibold text-blue-600">{formatCurrency(ivaAIngresar)}</span>
               </div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-base text-gray-700 font-medium">IRPF retenido en facturas:</span>
-                <span className="text-lg font-semibold text-emerald-600">{formatCurrency(retencionesIrpf)}</span>
+                <span className="text-base text-gray-700 font-medium">IRPF a ingresar:</span>
+                <span className="text-lg font-semibold text-red-600">{formatCurrency(irpfGastos)}</span>
               </div>
             </div>
           </div>

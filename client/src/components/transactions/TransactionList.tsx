@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import React, { useState, useEffect, useRef, Dispatch, SetStateAction, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ColumnDef } from "@tanstack/react-table";
@@ -48,6 +48,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Transaction, Category } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { determineEditor, determineOrigin, logEditorDecision, type TransactionData } from "@/lib/transactionUtils";
 
 // Mantenemos la definición Invoice propia de este componente
 interface Invoice {
@@ -92,23 +93,106 @@ const DeleteTransactionDialog = ({
 
   const handleDelete = async () => {
     setIsPending(true);
+    console.log(`Intentando eliminar transacción ${transactionId}: ${description}`);
+    
     try {
-      await apiRequest("DELETE", `/api/transactions/${transactionId}`);
+      // Usar fetch directo para mejor debugging
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'include', // Importante para las cookies de sesión
+      });
+      
+      console.log('Respuesta del servidor - Status:', response.status);
+      console.log('Respuesta del servidor - Headers:', response.headers);
+      
+      if (!response.ok) {
+        let errorMessage = `Error ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      
+      const result = await response.json();
+      console.log('Respuesta exitosa del servidor:', result);
+      
       toast({
         title: "Movimiento eliminado",
-        description: `El movimiento ha sido eliminado con éxito`,
+        description: `El movimiento "${description}" ha sido eliminado con éxito`,
       });
+      
       // Invalidar todas las consultas relevantes para garantizar que el dashboard y otras vistas se actualicen correctamente
+      console.log('🔄 Invalidando queries y forzando sincronización...');
+      
+      // Primero eliminar la caché completamente para forzar refetch
+      queryClient.removeQueries({ queryKey: ["/api/transactions"] });
+      queryClient.removeQueries({ queryKey: ["/api/invoices"] });
+      queryClient.removeQueries({ queryKey: ["/api/stats/dashboard"] });
+      
+      // Luego invalidar para refetch automático - añadir más variaciones
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/invoices"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] })
+        queryClient.invalidateQueries({ queryKey: ["/api/stats/dashboard"] }),
+        // También invalidar queries más específicas que podrían estar en uso
+        queryClient.invalidateQueries({ queryKey: ["/api/invoices/recent"] }),
+        queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+        queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        // Añadir invalidación específica para listas de facturas
+        queryClient.invalidateQueries({ queryKey: ["invoicesList"] }),
+        queryClient.invalidateQueries({ queryKey: ["invoices", "list"] })
       ]);
+      
+      // Disparar eventos personalizados para actualizar componentes que escuchan eventos específicos
+      window.dispatchEvent(new CustomEvent('updateInvoices', { 
+        detail: { source: 'transaction-deletion', transactionId: transactionId }
+      }));
+      window.dispatchEvent(new CustomEvent('updateTransactions'));
+      window.dispatchEvent(new CustomEvent('transaction-deleted', { 
+        detail: { transactionId: transactionId }
+      }));
+      // Añadir evento específico para facturas en caso de que la transacción haya eliminado una factura
+      window.dispatchEvent(new CustomEvent('invoice-deleted', { 
+        detail: { source: 'transaction-deletion', transactionId: transactionId }
+      }));
+      window.dispatchEvent(new CustomEvent('invoices-updated'));
+      
+      console.log('✅ Sincronización completada');
       onConfirm();
+      
     } catch (error: any) {
+      console.error('Error completo al eliminar:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      let errorMessage = "Error desconocido";
+      
+      // Manejar diferentes tipos de errores
+      if (error.message.includes('401')) {
+        errorMessage = "No tienes autorización para eliminar este movimiento";
+      } else if (error.message.includes('403')) {
+        errorMessage = "No tienes permisos para eliminar este movimiento";
+      } else if (error.message.includes('404')) {
+        errorMessage = "El movimiento ya no existe o no se encontró";
+      } else if (error.message.includes('500')) {
+        errorMessage = "Error interno del servidor";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Error",
-        description: `No se pudo eliminar el movimiento: ${error.message}`,
+        title: "Error al eliminar",
+        description: `No se pudo eliminar el movimiento: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -127,7 +211,11 @@ const DeleteTransactionDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción eliminará permanentemente el movimiento "{description}".
+            Esta acción eliminará permanentemente el movimiento "{description}" (ID: {transactionId}).
+            <br />
+            <small className="text-xs text-gray-400 mt-1 block">
+              Si experimentas problemas, revisa la consola del navegador (F12) para más detalles.
+            </small>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -177,6 +265,13 @@ const TransactionList = () => {
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+  
+  // Efecto para establecer la pestaña correcta según la ruta
+  useEffect(() => {
+    if (location === "/gastos") {
+      setCurrentTab("expense");
+    }
+  }, [location]);
   
   // Eliminar múltiples transacciones
   const handleDeleteSelectedTransactions = async (transactions: Transaction[]) => {
@@ -761,17 +856,39 @@ const TransactionList = () => {
         
         return (
           <div className="flex justify-end space-x-1">
-            {/* Botón de editar - visible solo si NO es un gasto */}
-            {transaction.type !== "expense" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
-                title="Editar"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
+            {/* Botón de editar - ahora visible para todos los tipos de transacciones */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // 🔥 NUEVA LÓGICA: Usar determineEditor para decidir qué editor abrir
+                const origin = window.location.pathname.includes('/transactions') 
+                  ? (window.location.search.includes('tab=income') ? 'transactions-income' : 'transactions')
+                  : 'transactions';
+                
+                const editorDecision = {
+                  path: `/transactions/edit/${transaction.id}`,
+                  type: 'transaction' as const,
+                  description: 'Editor de transacciones'
+                };
+                
+                // Lógica centralizada para determinar editor
+                if (transaction.type === 'expense') {
+                  // Gastos siempre van al editor de transacciones
+                  navigate(`/transactions/edit/${transaction.id}`);
+                } else if (transaction.type === 'income' && transaction.invoiceId) {
+                  // Ingresos con factura van al editor de facturas
+                  const returnParam = `?returnTo=${encodeURIComponent(origin)}`;
+                  navigate(`/invoices/edit/${transaction.invoiceId}${returnParam}`);
+                } else {
+                  // Ingresos sin factura van al editor de transacciones
+                  navigate(`/transactions/edit/${transaction.id}`);
+                }
+              }}
+              title="Editar"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
             
             {/* Botón de descarga - siempre visible pero deshabilitado si no hay adjuntos */}
             <Button
@@ -920,8 +1037,35 @@ const TransactionList = () => {
             </div>
           </div>
           
-          {/* Espacio para mantener la alineación */}
-          <div className="mr-6"></div>
+          {/* Botón de prueba temporal para debuggear */}
+          <div className="mr-6">
+            <button
+              onClick={async () => {
+                try {
+                  console.log('Probando conexión con el servidor...');
+                  const response = await fetch('/api/transactions', {
+                    method: 'GET',
+                    credentials: 'include',
+                  });
+                  console.log('Status de conexión:', response.status);
+                  console.log('Headers:', Object.fromEntries(response.headers.entries()));
+                  
+                  if (response.ok) {
+                    const data = await response.json();
+                    console.log('Datos recibidos:', data.length, 'transacciones');
+                    console.log('Primera transacción:', data[0]);
+                  } else {
+                    console.log('Error en respuesta:', await response.text());
+                  }
+                } catch (error) {
+                  console.error('Error de conexión:', error);
+                }
+              }}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded"
+            >
+              Probar Conexión
+            </button>
+          </div>
         </div>
       )}
 
@@ -1138,7 +1282,6 @@ const TransactionList = () => {
             searchPlaceholder="Buscar movimientos por descripción, importe o fecha..."
             actionButtons={currentTab === 'expense' ? (
               <>
-
                 {/* Exportar todos los gastos */}
                 <button 
                   className="text-sm px-2 sm:px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-100 flex items-center"
@@ -1165,6 +1308,18 @@ const TransactionList = () => {
                   <ScanText className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline font-medium">Escanear gasto</span>
                   <span className="sm:hidden font-medium">Scan</span>
+                </button>
+                
+                {/* Crear gasto manual - Estilo Apple */}
+                <button 
+                  className="text-sm px-2 sm:px-3 py-1.5 bg-gradient-to-b from-[#34C759] to-[#30B454] text-white rounded-full hover:from-[#32D74B] hover:to-[#34C759] transition-all flex items-center shadow-sm relative overflow-hidden"
+                  onClick={() => navigate("/transactions/new?type=expense")}
+                  title="Crear gasto manual"
+                >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+                  <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline font-medium">Crear gasto</span>
+                  <span className="sm:hidden font-medium">Crear</span>
                 </button>
                 
                 {/* Descargar originales */}
@@ -1226,8 +1381,6 @@ const TransactionList = () => {
                     </span>
                   )}
                 </button>
-                
-                {/* Se eliminó el registro rápido de gastos */}
               </>
             ) : currentTab === 'income' ? (
               <>

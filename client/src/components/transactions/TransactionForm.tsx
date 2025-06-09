@@ -38,6 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { determineEditor, determineOrigin, logEditorDecision, type TransactionData } from "@/lib/transactionUtils";
 
 const transactionSchema = z.object({
   title: z.string().optional(),
@@ -49,6 +50,18 @@ const transactionSchema = z.object({
   paymentMethod: z.string().min(1, "El método de pago es obligatorio"),
   notes: z.string().optional(),
   attachments: z.array(z.string()).optional(),
+  
+  // Campos fiscales
+  netAmount: z.coerce.number().optional(),
+  vatRate: z.coerce.number().optional(),
+  vatAmount: z.coerce.number().optional(),
+  irpfRate: z.coerce.number().optional(),
+  irpfAmount: z.coerce.number().optional(),
+  deductiblePercent: z.coerce.number().optional(),
+  vatDeductiblePercent: z.coerce.number().optional(),
+  isDeductible: z.boolean().optional(),
+  vendorName: z.string().optional(),
+  vendorId: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -76,6 +89,22 @@ interface Transaction {
   paymentMethod: string;
   notes?: string;
   attachments?: string[];
+  fiscalData?: {
+    netAmount: number;
+    vatRate: number;
+    vatAmount: number;
+    vatDeductiblePercent: number;
+    irpfRate: number;
+    irpfAmount: number;
+    deductibleForCorporateTax: boolean;
+    deductibleForIrpf: boolean;
+    deductiblePercent: number;
+    supplierName?: string;
+    supplierTaxId?: string;
+    invoiceNumber?: string;
+    totalAmount: number;
+  };
+  invoiceId?: number;
 }
 
 // Esquema para el formulario de categoría
@@ -161,6 +190,18 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     paymentMethod: "bank_transfer",
     notes: "",
     attachments: [] as string[],
+    
+    // Valores fiscales por defecto
+    netAmount: 0,
+    vatRate: 21,
+    vatAmount: 0,
+    irpfRate: 0,
+    irpfAmount: 0,
+    deductiblePercent: 100,
+    vatDeductiblePercent: 100,
+    isDeductible: true,
+    vendorName: "",
+    vendorId: "",
   };
 
   // Initialize form with default values
@@ -169,14 +210,52 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
     defaultValues,
   });
 
+  // Leer parámetros de la URL para preseleccionar el tipo de transacción
+  useEffect(() => {
+    if (!isEditMode) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeParam = urlParams.get('type');
+      
+      if (typeParam === 'expense' || typeParam === 'income') {
+        form.setValue('type', typeParam);
+        
+        // Si es un gasto, preseleccionar algunos valores fiscales por defecto
+        if (typeParam === 'expense') {
+          form.setValue('vatRate', 21);
+          form.setValue('vatDeductiblePercent', 100);
+          form.setValue('irpfRate', 0);
+          form.setValue('deductiblePercent', 100);
+          form.setValue('isDeductible', true);
+        }
+      }
+    }
+  }, [isEditMode, form]);
+
   // Initialize form with transaction data when loaded
   useEffect(() => {
     if (transactionData && !transactionLoading) {
+      console.log("🔵🔴 === CARGANDO DATOS DE TRANSACCIÓN ===");
       console.log("Transaction data loaded:", transactionData);
-      console.log("Date from API:", transactionData.date);
+      
+      // 🔥 NUEVA LÓGICA CENTRALIZADA: Determinar qué editor abrir
+      const origin = determineOrigin(location);
+      const editorDecision = determineEditor(transactionData as TransactionData, origin);
+      
+      // Log de la decisión para debugging
+      logEditorDecision(transactionData as TransactionData, editorDecision, origin);
+      
+      // Si el editor determinado NO es el editor de transacciones, redirigir
+      if (editorDecision.type === 'invoice') {
+        console.log(`🔄 REDIRIGIENDO: ${editorDecision.description}`);
+        navigate(editorDecision.path);
+        return; // Salir temprano para evitar procesar el formulario
+      }
+      
+      // Si llegamos aquí, es porque debe abrir el editor de transacciones
+      console.log(`✅ USANDO EDITOR DE TRANSACCIONES: ${editorDecision.description}`);
       
       // Convierte la fecha con mayor robustez
-      let transactionDate;
+      let transactionDate: Date;
       try {
         // La fecha puede venir en varios formatos, intentamos procesarla adecuadamente
         if (typeof transactionData.date === 'string') {
@@ -205,20 +284,149 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
       // Si no hay un título en los datos, usar la descripción como título
       const title = transactionData.title || transactionData.description;
       
-      form.reset({
+      // Preparar datos base
+      const baseFormData = {
         ...transactionData,
         title: title, // Usar título existente o la descripción como título
         date: transactionDate,
+        type: transactionData.type, // Establecer explícitamente el tipo
         amount: typeof transactionData.amount === 'string' 
           ? parseFloat(transactionData.amount) 
           : transactionData.amount,
-      });
+      };
+      
+      console.log("🔍 baseFormData.type:", baseFormData.type);
+      
+      // Si es un ingreso, NO cargar datos fiscales (estos ingresos son transacciones simples sin factura)
+      if (transactionData.type === 'income') {
+        console.log("🔵 Loading INCOME - ingreso simple sin factura asociada");
+        console.log("🔵 INCOME amount:", baseFormData.amount);
+        
+        const formData = {
+          ...baseFormData,
+          type: 'income' as const, // Asegurar que el tipo sea income
+          // Para ingresos: netAmount = amount (sin campos fiscales complejos)
+          netAmount: baseFormData.amount,
+          vatRate: 21, // Valores por defecto básicos
+          vatAmount: 0,
+          irpfRate: 0,
+          irpfAmount: 0,
+          deductiblePercent: 100,
+          vatDeductiblePercent: 100,
+          isDeductible: true,
+          vendorName: "",
+          vendorId: "",
+        };
+        
+        console.log("🔵 INCOME formData COMPLETO:", formData);
+        form.reset(formData);
+        
+        // Verificar inmediatamente después del reset
+        setTimeout(() => {
+          console.log("🔵 INCOME - form values AFTER reset:", form.getValues());
+          console.log("🔵 INCOME - type after reset:", form.getValues('type'));
+          console.log("🔵 INCOME - amount after reset:", form.getValues('amount'));
+        }, 50);
+      } 
+      // Si es un gasto, cargar datos fiscales si existen
+      else if (transactionData.type === 'expense') {
+        console.log("🔴 Loading EXPENSE - loading fiscal data");
+        
+        const fiscalData = transactionData.fiscalData;
+        
+        // DEBUGGING: Log detallado de datos fiscales
+        console.log("🔍 DEBUG - fiscalData object:", fiscalData);
+        console.log("🔍 DEBUG - fiscalData?.netAmount:", fiscalData?.netAmount);
+        console.log("🔍 DEBUG - fiscalData?.vatRate:", fiscalData?.vatRate);
+        console.log("🔍 DEBUG - fiscalData?.irpfRate:", fiscalData?.irpfRate);
+        console.log("🔍 DEBUG - baseFormData.amount:", baseFormData.amount);
+        
+        // 🔥 CORRECCIÓN MEJORADA: Función auxiliar para parsear valores numéricos de forma segura
+        const safeParseNumber = (value: any, fallback: number = 0): number => {
+          if (value === null || value === undefined) return fallback;
+          if (typeof value === 'number') return isNaN(value) ? fallback : value;
+          if (typeof value === 'string') {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? fallback : parsed;
+          }
+          return fallback;
+        };
+        
+        // 🔥 CORRECCIÓN: Lógica mejorada para preservar datos fiscales existentes
+        // Si no hay datos fiscales, usar el amount total como base y calcular el resto
+        const hasValidFiscalData = fiscalData && (
+          fiscalData.netAmount !== null && 
+          fiscalData.netAmount !== undefined && 
+          fiscalData.netAmount > 0
+        );
+        
+        let netAmount, vatRate, vatAmount, irpfRate, irpfAmount;
+        
+        if (hasValidFiscalData) {
+          // Si hay datos fiscales válidos, usarlos
+          netAmount = safeParseNumber(fiscalData.netAmount, baseFormData.amount);
+          vatRate = safeParseNumber(fiscalData.vatRate, 21);
+          vatAmount = safeParseNumber(fiscalData.vatAmount, 0);
+          irpfRate = safeParseNumber(fiscalData.irpfRate, 0);
+          irpfAmount = safeParseNumber(fiscalData.irpfAmount, 0);
+          
+          console.log("🔴 USANDO datos fiscales existentes");
+        } else {
+          // Si no hay datos fiscales válidos, usar el amount como base imponible y asumir 21% IVA
+          const totalAmount = baseFormData.amount;
+          netAmount = Math.round((totalAmount / 1.21) * 100) / 100; // Calcular base asumiendo 21% IVA
+          vatRate = 21;
+          vatAmount = Math.round((netAmount * 0.21) * 100) / 100;
+          irpfRate = 0;
+          irpfAmount = 0;
+          
+          console.log("🔴 CALCULANDO datos fiscales desde amount total");
+          console.log("🔴 Total amount:", totalAmount, "-> Base calculada:", netAmount, "-> IVA calculado:", vatAmount);
+        }
+        
+        const formData = {
+          ...baseFormData,
+          type: 'expense' as const, // Asegurar que el tipo sea expense
+          // Usar los valores calculados o preservados
+          netAmount: netAmount,
+          vatRate: vatRate,
+          vatAmount: vatAmount,
+          irpfRate: irpfRate,
+          irpfAmount: irpfAmount,
+          deductiblePercent: safeParseNumber(fiscalData?.deductiblePercent, 100),
+          vatDeductiblePercent: safeParseNumber(fiscalData?.vatDeductiblePercent, 100),
+          isDeductible: fiscalData?.deductibleForCorporateTax !== undefined ? fiscalData.deductibleForCorporateTax : true,
+          vendorName: fiscalData?.supplierName || "",
+          vendorId: fiscalData?.supplierTaxId || "",
+        };
+        
+        console.log("🔴 EXPENSE formData before reset:", formData);
+        console.log("🔍 DEBUG - formData.netAmount final:", formData.netAmount);
+        console.log("🔍 DEBUG - formData.vatRate final:", formData.vatRate);
+        console.log("🔍 DEBUG - formData.vatAmount final:", formData.vatAmount);
+        console.log("🔍 DEBUG - formData.amount final:", formData.amount);
+        
+        form.reset(formData);
+        
+        // Verificar después del reset solo para gastos
+        setTimeout(() => {
+          console.log("🔍 DEBUG - form values after reset:", form.getValues());
+          console.log("🔍 DEBUG - form netAmount after reset:", form.getValues().netAmount);
+          console.log("🔍 DEBUG - form vatRate after reset:", form.getValues().vatRate);
+          console.log("🔍 DEBUG - form vatAmount after reset:", form.getValues().vatAmount);
+          console.log("🔍 DEBUG - form amount after reset:", form.getValues().amount);
+        }, 100);
+      } else {
+        console.log("❌ UNKNOWN transaction type:", transactionData.type);
+      }
       
       if (transactionData.attachments) {
         setAttachments(transactionData.attachments);
       }
+      
+      console.log("🔵🔴 === FIN CARGA DE DATOS ===");
     }
-  }, [transactionData, transactionLoading, form]);
+  }, [transactionData, transactionLoading, form, navigate, isEditMode, location]);
 
   // Create or update transaction mutation
   const mutation = useMutation({
@@ -417,11 +625,25 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
             : data.categoryId,
     };
     
-    // Añadir los archivos adjuntos al payload pero no al objeto formattedData
-    // ya que no es parte del esquema TransactionFormValues
+    // Preparar datos fiscales para enviar al backend
+    const fiscalData = data.type === 'expense' ? {
+      netAmount: Number(data.netAmount) || 0,
+      vatRate: Number(data.vatRate) || 0,
+      vatAmount: Number(data.vatAmount) || 0,
+      irpfRate: Number(data.irpfRate) || 0,
+      irpfAmount: Number(data.irpfAmount) || 0,
+      deductiblePercent: Number(data.deductiblePercent) || 100,
+      vatDeductiblePercent: Number(data.vatDeductiblePercent) || 100,
+      isDeductible: data.isDeductible !== false,
+      vendorName: data.vendorName || '',
+      vendorId: data.vendorId || '',
+    } : null;
+    
+    // Añadir los archivos adjuntos y datos fiscales al payload
     const payloadToSend = {
       ...formattedData,
-      attachments: attachments || []
+      attachments: attachments || [],
+      fiscalData: fiscalData, // Incluir datos fiscales en el payload
     };
     
     console.log("Enviando datos al servidor:", JSON.stringify(payloadToSend, null, 2));
@@ -557,17 +779,11 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   };
 
   // Verificar si las notas contienen información de OCR
-  const hasOcrData = transactionData?.notes?.includes('Extraído automáticamente');
-  const taxAmount = hasOcrData ? extractTaxInfo(transactionData?.notes) : null;
-  const vendor = hasOcrData ? extractVendorInfo(transactionData?.notes) : null;
+  const hasOcrData: boolean = transactionData?.notes?.includes('Extraído automáticamente') || false;
+  const taxAmount: string | null = hasOcrData ? extractTaxInfo(transactionData?.notes) : null;
+  const vendor: string | null = hasOcrData ? extractVendorInfo(transactionData?.notes) : null;
 
-  if ((isEditMode && transactionLoading) || categoriesLoading) {
-    return <div className="flex justify-center p-8">
-      <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-    </div>;
-  }
-
-  // Mutación para crear una nueva categoría
+  // Mutación para crear una nueva categoría (MOVER ANTES DEL EARLY RETURN)
   const createCategoryMutation = useMutation({
     mutationFn: async (data: CategoryFormValues) => {
       const response = await apiRequest("POST", "/api/categories", data);
@@ -612,6 +828,101 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
   const handleCreateCategory = (data: CategoryFormValues) => {
     createCategoryMutation.mutate(data);
   };
+
+  // ===== FUNCIONES FISCALES =====
+  
+  // Función para calcular automáticamente los importes fiscales
+  const calculateTaxAmounts = (netAmount: number, vatRate: number, irpfRate: number) => {
+    // Asegurar que todos los valores son números
+    const safeNetAmount = Number(netAmount) || 0;
+    const safeVatRate = Number(vatRate) || 0;
+    const safeIrpfRate = Number(irpfRate) || 0;
+    
+    // Si no hay base imponible, resetear todo
+    if (!safeNetAmount || safeNetAmount <= 0) {
+      return {
+        vatAmount: 0,
+        irpfAmount: 0,
+        totalAmount: 0,
+      };
+    }
+
+    // Calcular IVA e IRPF sobre la base imponible
+    const vatAmount = safeNetAmount * (safeVatRate / 100);
+    const irpfAmount = safeNetAmount * (safeIrpfRate / 100);
+    
+    // El total es: Base + IVA - IRPF
+    const totalAmount = safeNetAmount + vatAmount - irpfAmount;
+
+    return {
+      vatAmount: Math.round(vatAmount * 100) / 100,
+      irpfAmount: Math.round(irpfAmount * 100) / 100,
+      totalAmount: Math.round(totalAmount * 100) / 100,
+    };
+  };
+
+  // Función para recalcular cuando cambie la base imponible
+  const handleNetAmountChange = (value: number) => {
+    const vatRate = Number(form.getValues('vatRate')) || 21;
+    const irpfRate = Number(form.getValues('irpfRate')) || 0;
+    
+    const calculated = calculateTaxAmounts(value, vatRate, irpfRate);
+    
+    form.setValue('vatAmount', calculated.vatAmount);
+    form.setValue('irpfAmount', calculated.irpfAmount);
+    form.setValue('amount', calculated.totalAmount);
+  };
+
+  // Función para recalcular cuando cambie el IVA
+  const handleVatRateChange = (value: number) => {
+    const netAmount = Number(form.getValues('netAmount')) || 0;
+    const irpfRate = Number(form.getValues('irpfRate')) || 0;
+    
+    const calculated = calculateTaxAmounts(netAmount, value, irpfRate);
+    
+    form.setValue('vatAmount', calculated.vatAmount);
+    form.setValue('irpfAmount', calculated.irpfAmount);
+    form.setValue('amount', calculated.totalAmount);
+  };
+
+  // Función para recalcular cuando cambie el IRPF
+  const handleIrpfRateChange = (value: number) => {
+    const netAmount = Number(form.getValues('netAmount')) || 0;
+    const vatRate = Number(form.getValues('vatRate')) || 21;
+    
+    const calculated = calculateTaxAmounts(netAmount, vatRate, value);
+    
+    form.setValue('vatAmount', calculated.vatAmount);
+    form.setValue('irpfAmount', calculated.irpfAmount);
+    form.setValue('amount', calculated.totalAmount);
+  };
+
+  // Función para aplicar configuraciones rápidas de tipos de gasto comunes
+  const applyQuickConfig = (config: {
+    vatRate: number;
+    vatDeductiblePercent: number;
+    irpfRate: number;
+    deductiblePercent: number;
+  }) => {
+    form.setValue('vatRate', config.vatRate);
+    form.setValue('vatDeductiblePercent', config.vatDeductiblePercent);
+    form.setValue('irpfRate', config.irpfRate);
+    form.setValue('deductiblePercent', config.deductiblePercent);
+    
+    // Recalcular importes basado en la base imponible actual
+    const netAmount = Number(form.getValues('netAmount')) || 0;
+    const calculated = calculateTaxAmounts(netAmount, config.vatRate, config.irpfRate);
+    
+    form.setValue('vatAmount', calculated.vatAmount);
+    form.setValue('irpfAmount', calculated.irpfAmount);
+    form.setValue('amount', calculated.totalAmount);
+  };
+
+  if ((isEditMode && transactionLoading) || categoriesLoading) {
+    return <div className="flex justify-center p-8">
+      <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+    </div>;
+  }
 
   return (
     <Form {...form}>
@@ -786,9 +1097,18 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Título del gasto</FormLabel>
+                  <FormLabel>
+                    {form.watch('type') === 'income' ? 'Título del ingreso' : 'Título del gasto'}
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Título que aparecerá en la lista de gastos" {...field} />
+                    <Input 
+                      placeholder={
+                        form.watch('type') === 'income' 
+                          ? "Título que aparecerá en la lista de ingresos" 
+                          : "Título que aparecerá en la lista de gastos"
+                      } 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -810,25 +1130,60 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Importe</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Campo de importe - diferente comportamiento según el tipo */}
+              {form.watch('type') === 'income' ? (
+                // Para ingresos: campo simple de importe total
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Importe total</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          {...field}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            field.onChange(e);
+                            // Para ingresos, sincronizar netAmount con amount
+                            form.setValue('netAmount', value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                // Para gastos: base imponible editable, total calculado
+                <FormField
+                  control={form.control}
+                  name="netAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Base Imponible</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            field.onChange(e);
+                            handleNetAmountChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -1097,6 +1452,256 @@ const TransactionForm = ({ transactionId }: TransactionFormProps) => {
                 )}
               </div>
             </div>
+
+            {/* Campos fiscales específicos para gastos */}
+            {form.watch('type') === 'expense' && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-blue-700 text-sm">Información Fiscal</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Botones de configuración rápida */}
+                  <div className="space-y-2">
+                    <FormLabel className="text-xs font-medium text-gray-600">Configuraciones rápidas:</FormLabel>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => applyQuickConfig({ vatRate: 21, vatDeductiblePercent: 100, irpfRate: 0, deductiblePercent: 100 })}
+                      >
+                        🏪 Compras
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => applyQuickConfig({ vatRate: 21, vatDeductiblePercent: 100, irpfRate: 15, deductiblePercent: 100 })}
+                      >
+                        💼 Servicios
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => applyQuickConfig({ vatRate: 0, vatDeductiblePercent: 0, irpfRate: 0, deductiblePercent: 100 })}
+                      >
+                        📚 Exento IVA
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => applyQuickConfig({ vatRate: 10, vatDeductiblePercent: 100, irpfRate: 0, deductiblePercent: 100 })}
+                      >
+                        🍽️ Restaurantes
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Campos de porcentajes de impuestos */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="vatRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>% IVA</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100" 
+                              step="1"
+                              {...field}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(e);
+                                handleVatRateChange(value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="irpfRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>% IRPF</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="50" 
+                              step="1"
+                              {...field}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(e);
+                                handleIrpfRateChange(value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="deductiblePercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>% Deducible</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100" 
+                              step="10"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="vatDeductiblePercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>% IVA Deducible</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100" 
+                              step="10"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Campos de importes calculados (solo lectura) */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="vatAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Importe IVA</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              {...field}
+                              readOnly
+                              className="bg-gray-50"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="irpfAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Importe IRPF</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              {...field}
+                              readOnly
+                              className="bg-gray-50"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Total a pagar</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              {...field}
+                              readOnly
+                              className="bg-gray-50 font-bold"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Campo para vendedor */}
+                    <FormField
+                      control={form.control}
+                      name="vendorName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Proveedor</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Nombre del proveedor"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Resumen visual */}
+                  <div className="bg-white p-3 rounded-md border">
+                    <h4 className="font-medium text-sm mb-2">Resumen del gasto:</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Base:</span>
+                        <span className="ml-2 font-medium">{(Number(form.watch('netAmount')) || 0).toFixed(2)}€</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">IVA:</span>
+                        <span className="ml-2 font-medium">{(Number(form.watch('vatAmount')) || 0).toFixed(2)}€</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">IRPF:</span>
+                        <span className="ml-2 font-medium text-red-600">-{(Number(form.watch('irpfAmount')) || 0).toFixed(2)}€</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Total:</span>
+                        <span className="ml-2 font-bold">{(Number(form.watch('amount')) || 0).toFixed(2)}€</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
 

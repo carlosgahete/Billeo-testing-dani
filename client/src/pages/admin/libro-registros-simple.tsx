@@ -53,6 +53,7 @@ interface Transaction {
   type: string;
   category: string;
   notes?: string;
+  netAmount?: number;
 }
 
 interface Quote {
@@ -531,6 +532,19 @@ export default function SimpleLibroRegistros({ params: propsParams, forceOwnUser
       
       filteredData.invoices.forEach(invoice => {
         csvContent += `${invoice.number},${formatDate(invoice.issueDate)},${invoice.client},${invoice.baseAmount.toFixed(2)},${invoice.vatAmount.toFixed(2)},${invoice.total.toFixed(2)},${invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : 'Cancelada'}\n`;
+      });
+      csvContent += `\n`;
+    }
+    
+    // Transacciones
+    if (filteredData.transactions && filteredData.transactions.length > 0) {
+      csvContent += `TRANSACCIONES\n`;
+      csvContent += `Fecha,Descripción,Categoría,Tipo,Base Imponible\n`;
+      
+      filteredData.transactions.forEach(transaction => {
+        // Calcular base imponible para las transacciones
+        const baseImponible = transaction.netAmount || (Math.abs(transaction.amount) / 1.21);
+        csvContent += `${formatDate(transaction.date)},${transaction.description},${transaction.category || 'Sin categoría'},${transaction.type === 'income' ? 'Ingreso' : 'Gasto'},${baseImponible.toFixed(2)}\n`;
       });
       csvContent += `\n`;
     }

@@ -168,7 +168,9 @@ export default function LibroRegistrosPublico() {
     csvContent += "Fecha,Descripción,Categoría,Importe,Tipo\n";
     
     mockData.transactions.forEach(tr => {
-      csvContent += `${tr.date},"${tr.description}","${tr.category}",${Math.abs(tr.amount).toLocaleString('es-ES')} €,${tr.type === 'income' ? 'Ingreso' : 'Gasto'}\n`;
+      // Para los datos de ejemplo, calcular base imponible asumiendo IVA 21%
+      const baseImponible = Math.abs(tr.amount) / 1.21;
+      csvContent += `${tr.date},"${tr.description}","${tr.category}",${baseImponible.toLocaleString('es-ES')} €,${tr.type === 'income' ? 'Ingreso' : 'Gasto'}\n`;
     });
     
     // Crear enlace de descarga

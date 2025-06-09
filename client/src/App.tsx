@@ -58,6 +58,10 @@ import AppleDashboardDemo from "@/pages/apple-dashboard-demo";
 import ClientsPage from "@/pages/clients/index";
 import CreateClientPage from "@/pages/clients/create";
 import NotificationsPage from "@/pages/notifications";
+// Eliminamos las importaciones de gastos fiscales ya que están integrados
+// import EnhancedExpenses from "@/pages/EnhancedExpenses";
+// import EnhancedExpenseForm from "@/components/expenses/EnhancedExpenseForm";
+
 // Componente de carga optimizado
 const LoadingIndicator = () => (
   <div className="flex items-center justify-center h-[calc(100vh-80px)]">
@@ -153,6 +157,7 @@ function Router() {
           </Layout>
         )}
       </Route>
+      
       <Route path="/documents/scan">
         <Layout>
           <ProtectedRoute path="/documents/scan" component={DocumentScanPage} />

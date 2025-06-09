@@ -14,7 +14,8 @@ import {
   PieChart,
   TrendingUp,
   ScanLine,
-  Plus
+  Plus,
+  TrendingDown
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

@@ -51,6 +51,7 @@ import { useLocation } from "wouter";
 import FileUpload from "../common/FileUpload";
 import { ClientForm } from "../clients/ClientForm";
 import { calculateInvoice } from "@/utils/invoiceEngine";
+import { getReturnPath } from "@/lib/transactionUtils";
 
 // Función auxiliar para convertir texto a número
 function toNumber(value: any, defaultValue = 0): number {
@@ -204,6 +205,17 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
   const queryClient = useQueryClient();
   
   const isEditMode = !!invoiceId;
+  
+  // 🔥 FUNCIÓN MEJORADA: Detectar página de origen para el botón "volver"
+  const getReturnRoute = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnTo = urlParams.get('returnTo');
+    
+    if (returnTo) {
+      return getReturnPath(returnTo);
+    }
+    return '/invoices'; // Por defecto
+  };
   
   // Mutation para eliminar clientes
   const deleteClientMutation = useMutation({
@@ -650,7 +662,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
           ? "La factura se ha actualizado correctamente"
           : "La factura se ha creado correctamente",
       });
-      navigate("/invoices");
+      navigate(getReturnRoute());
     },
     onError: (error) => {
       console.error("❌ Error al guardar factura:", error);
@@ -1521,7 +1533,7 @@ const InvoiceForm = ({ invoiceId, initialData }: InvoiceFormProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/invoices")}
+              onClick={() => navigate(getReturnRoute())}
             >
               Cancelar
             </Button>

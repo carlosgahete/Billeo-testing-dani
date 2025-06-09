@@ -81,6 +81,7 @@ interface Transaction {
   type: string;
   category: string;
   notes?: string;
+  netAmount?: number;
 }
 
 interface Quote {
@@ -643,7 +644,7 @@ export default function ClientLibroRegistros({ forceOwnUser = false }: ClientLib
         transaction.description,
         transaction.category || 'Sin categoría',
         transaction.type === 'income' ? 'Ingreso' : 'Gasto',
-        transaction.amount
+        transaction.netAmount || (Math.abs(transaction.amount) / 1.21)
       ]);
       
       csvContent += '\n' + convertToCSV(transactionRows);

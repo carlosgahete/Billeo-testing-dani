@@ -58,6 +58,7 @@ interface Transaction {
   type: string;
   category: string;
   notes?: string;
+  netAmount?: number;
 }
 
 interface Quote {
@@ -200,7 +201,7 @@ export default function LibroRegistrosLibre() {
           format(new Date(tr.date), 'dd/MM/yyyy'),
           tr.description,
           tr.category,
-          `${Math.abs(tr.amount).toLocaleString('es-ES')} €`,
+          `${(tr.netAmount || (Math.abs(tr.amount) / 1.21)).toLocaleString('es-ES')} €`,
           tr.type === 'income' ? 'Ingreso' : 'Gasto'
         ])
       ];
@@ -279,7 +280,9 @@ export default function LibroRegistrosLibre() {
       csvContent += "Fecha,Descripción,Categoría,Importe,Tipo\n";
       
       data.transactions.forEach(tr => {
-        csvContent += `${format(new Date(tr.date), 'dd/MM/yyyy')},"${tr.description}","${tr.category}",${Math.abs(tr.amount).toLocaleString('es-ES')} €,${tr.type === 'income' ? 'Ingreso' : 'Gasto'}\n`;
+        // Calcular base imponible para las transacciones
+        const baseImponible = tr.netAmount || (Math.abs(tr.amount) / 1.21);
+        csvContent += `${format(new Date(tr.date), 'dd/MM/yyyy')},"${tr.description}","${tr.category}",${baseImponible.toLocaleString('es-ES')} €,${tr.type === 'income' ? 'Ingreso' : 'Gasto'}\n`;
       });
       
       csvContent += "\n";

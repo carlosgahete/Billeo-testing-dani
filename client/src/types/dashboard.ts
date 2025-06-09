@@ -48,6 +48,12 @@ export interface DashboardStats {
   irpfRetenidoIngresos?: number;
   totalWithholdings?: number;
   
+  // NUEVOS CAMPOS FISCALES ESPECÍFICOS
+  gastosDeducibles?: number;   // Cifra neta de gastos que sean deducibles
+  ivaDeducible?: number;       // IVA soportado que sea deducible
+  resultadoFiscal?: number;    // Resultado: neto ingresos - neto gastos deducibles
+  ivaAIngresar?: number;       // IVA a ingresar: IVA ingresos - IVA deducible
+  
   // Valores netos (nuevos campos)
   netIncome?: number;      // Ingresos netos (descontando IRPF)
   netExpenses?: number;    // Gastos netos (descontando IRPF)

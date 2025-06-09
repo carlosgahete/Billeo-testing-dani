@@ -18,6 +18,7 @@ import { registerDashboardStateRoutes } from "./routes-dashboard-state";
 import { updateDashboardState } from "./dashboard-state";
 import { registerPollingRoutes } from "./routes-polling";
 import { setupVite, serveStatic, log } from "./vite";
+import { registerEnhancedExpenseRoutes } from "./enhanced-routes";
 
 // Obtener el equivalente a __dirname en ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -158,6 +159,15 @@ app.use((req, res, next) => {
 
   const server = await registerRoutes(app);
   
+  // Añadir el endpoint directa para el dashboard ANTES de cualquier otra configuración
+  try {
+    const { registerDirectDashboardEndpoint } = await import('./dashboard-direct');
+    registerDirectDashboardEndpoint(app);
+    console.log('✅ Endpoint directo para el dashboard (/api/dashboard-direct) configurado CORRECTAMENTE');
+  } catch (err) {
+    console.error('❌ Error al cargar el módulo de dashboard directo:', err);
+  }
+  
   // Configurar las rutas para gastos básicos
   configureBetterExpenseRoutes(app);
   
@@ -181,13 +191,8 @@ app.use((req, res, next) => {
     console.error('Error al cargar el módulo de prueba de correo:', err);
   });
   
-  // Añadir el endpoint directa para el dashboard
-  import('./dashboard-direct').then((module) => {
-    module.registerDirectDashboardEndpoint(app);
-    console.log('Endpoint directo para el dashboard (/api/dashboard-direct) configurado');
-  }).catch(err => {
-    console.error('Error al cargar el módulo de dashboard directo:', err);
-  });
+  // Register all routes
+  registerEnhancedExpenseRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

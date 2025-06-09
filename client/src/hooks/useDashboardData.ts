@@ -14,6 +14,7 @@ export interface DashboardStats {
   ivaRepercutido?: number;
   ivaSoportado?: number;
   irpfRetenidoIngresos?: number;
+  irpfGastos?: number;
   irpfTotal?: number;
   totalWithholdings?: number;
   netIncome?: number;

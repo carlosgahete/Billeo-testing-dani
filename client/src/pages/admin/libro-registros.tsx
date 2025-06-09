@@ -244,7 +244,14 @@ const LibroRegistrosPage = ({ params }: { params: { userId: string } }) => {
             type: "transaction" as RecordType,
             date: new Date(transaction.date),
             concept: transaction.description || transaction.title || "Transacción",
-            amount: transaction.type === "expense" ? "-" + transaction.amount : transaction.amount,
+            amount: (() => {
+              if (transaction.fiscalData?.netAmount && transaction.fiscalData.netAmount > 0) {
+                return transaction.type === "expense" ? "-" + transaction.fiscalData.netAmount : transaction.fiscalData.netAmount;
+              }
+              const total = parseFloat(transaction.amount || '0');
+              const baseImponible = total / 1.21;
+              return transaction.type === "expense" ? "-" + baseImponible.toFixed(2) : baseImponible.toFixed(2);
+            })(),
             tax: transaction.additionalTaxes || "0",
             total: transaction.amount,
             category: transaction.categoryName,

@@ -16,7 +16,8 @@ declare module "express-session" {
 
 // Declaración de tipos globales para la función de actualización del dashboard
 declare global {
-  var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<void>;
+  var registerDashboardEvent: (type: string, data?: any, userId?: number) => Promise<boolean | undefined>;
+  var updateDashboardState: (type: string, data?: any, userId?: number) => Promise<boolean | undefined>;
 }
 
 const scryptAsync = promisify(scrypt);
@@ -33,7 +34,7 @@ import { setupAuth } from "./auth";
 import { sendInvoiceEmail, sendQuoteEmail } from "./services/emailService";
 import * as visionService from "./services/visionService";
 import { db } from "./db";
-import { eq, gte, lt, inArray, desc, asc } from "drizzle-orm";
+import { eq, gte, lt, inArray, desc, asc, and } from "drizzle-orm";
 import { 
   insertUserSchema, 
   insertCompanySchema,
@@ -57,8 +58,10 @@ import {
   clients,
   categories,
   companies,
-  dashboardEvents
+  dashboardEvents,
+  dashboardState
 } from "@shared/schema";
+import { expenses } from "@shared/enhanced-schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -1144,7 +1147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param data - Datos adicionales relacionados con el evento (no se almacena)
    * @param userId - ID del usuario que realizó la acción
    */
-  async function updateDashboardState(type: string, data: any = null, userId: number | undefined) {
+  async function updateDashboardState(type: string, data: any = null, userId: number | undefined): Promise<boolean | undefined> {
     // Imprimir información de diagnóstico
     console.log(`🔄 LLAMADA A updateDashboardState (routes.ts):`);
     console.log(`🔑 userId: ${userId} (tipo: ${typeof userId})`);
@@ -1153,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Verificar que userId sea un número válido
     if (userId === undefined || userId === null) {
       console.error('❌ updateDashboardState: userId es undefined/null, se requiere un ID de usuario válido');
-      return;
+      return false;
     }
     
     // Convertir userId a número si es string
@@ -1162,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Si no es un número válido después de la conversión, abortamos
     if (isNaN(userIdNum)) {
       console.error(`❌ updateDashboardState: userId inválido (${userId})`);
-      return;
+      return false;
     }
   
     try {
@@ -1209,8 +1212,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log(`✅ Estado del dashboard actualizado: ${type} para usuario ${userIdNum}`);
+      return true;
     } catch (error) {
       console.error(`❌ Error al actualizar estado del dashboard:`, error);
+      return false;
     }
   }
   
@@ -1274,6 +1279,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(transactions);
     } catch (error) {
       console.error("Error en /api/transactions:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Endpoint específico para obtener transacciones con datos fiscales (usado por libro de registros)
+  app.get("/api/transactions/user/:userId", requireSuperAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Obtener transacciones básicas
+      const transactions = await storage.getTransactionsByUserId(userId);
+      
+      // Para cada transacción de tipo expense, intentar obtener datos fiscales
+      const { db } = await import('./db');
+      const { expenses } = await import('../shared/enhanced-schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const enhancedTransactions = await Promise.all(
+        transactions.map(async (transaction) => {
+          if (transaction.type === 'expense') {
+            try {
+              const fiscalData = await db
+                .select()
+                .from(expenses)
+                .where(eq(expenses.transactionId, transaction.id))
+                .limit(1);
+              
+              if (fiscalData.length > 0) {
+                const expenseRecord = fiscalData[0];
+                
+                return {
+                  ...transaction,
+                  fiscalData: {
+                    netAmount: parseFloat(expenseRecord.netAmount || '0'),
+                    vatRate: parseFloat(expenseRecord.vatRate || '0'),
+                    vatAmount: parseFloat(expenseRecord.vatAmount || '0'),
+                    vatDeductiblePercent: parseFloat(expenseRecord.vatDeductiblePercent || '100'),
+                    irpfRate: parseFloat(expenseRecord.irpfRate || '0'),
+                    irpfAmount: parseFloat(expenseRecord.irpfAmount || '0'),
+                    deductibleForCorporateTax: expenseRecord.deductibleForCorporateTax,
+                    deductibleForIrpf: expenseRecord.deductibleForIrpf,
+                    deductiblePercent: parseFloat(expenseRecord.deductiblePercent || '100'),
+                    supplierName: expenseRecord.supplierName,
+                    supplierTaxId: expenseRecord.supplierTaxId,
+                    invoiceNumber: expenseRecord.invoiceNumber,
+                    totalAmount: parseFloat(expenseRecord.totalAmount || '0')
+                  }
+                };
+              }
+            } catch (fiscalError) {
+              console.error(`Error al obtener datos fiscales para transacción ${transaction.id}:`, fiscalError);
+            }
+          }
+          
+          return transaction;
+        })
+      );
+      
+      return res.status(200).json(enhancedTransactions);
+    } catch (error) {
+      console.error("Error en /api/transactions/user/:userId:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -3552,6 +3622,49 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         return res.status(403).json({ message: "Unauthorized to access this transaction" });
       }
       
+      // Si es un gasto, intentar obtener los datos fiscales de la tabla expenses
+      if (transaction.type === 'expense') {
+        try {
+          const { db } = await import('./db');
+          const { expenses } = await import('../shared/enhanced-schema');
+          const { eq } = await import('drizzle-orm');
+          
+          const fiscalData = await db
+            .select()
+            .from(expenses)
+            .where(eq(expenses.transactionId, transactionId))
+            .limit(1);
+          
+          if (fiscalData.length > 0) {
+            const expenseRecord = fiscalData[0];
+            
+            // Añadir los datos fiscales a la respuesta en el formato esperado por el frontend
+            (transaction as any).fiscalData = {
+              netAmount: parseFloat(expenseRecord.netAmount || '0'),
+              vatRate: parseFloat(expenseRecord.vatRate || '0'),
+              vatAmount: parseFloat(expenseRecord.vatAmount || '0'),
+              vatDeductiblePercent: parseFloat(expenseRecord.vatDeductiblePercent || '100'),
+              irpfRate: parseFloat(expenseRecord.irpfRate || '0'),
+              irpfAmount: parseFloat(expenseRecord.irpfAmount || '0'),
+              deductibleForCorporateTax: expenseRecord.deductibleForCorporateTax,
+              deductibleForIrpf: expenseRecord.deductibleForIrpf,
+              deductiblePercent: parseFloat(expenseRecord.deductiblePercent || '100'),
+              supplierName: expenseRecord.supplierName,
+              supplierTaxId: expenseRecord.supplierTaxId,
+              invoiceNumber: expenseRecord.invoiceNumber,
+              totalAmount: parseFloat(expenseRecord.totalAmount || '0')
+            };
+            
+            console.log(`Datos fiscales recuperados para transacción ${transactionId}:`, (transaction as any).fiscalData);
+          } else {
+            console.log(`No se encontraron datos fiscales para la transacción ${transactionId}`);
+          }
+        } catch (fiscalError) {
+          console.error("Error al recuperar datos fiscales:", fiscalError);
+          // No fallamos la consulta por un error en datos fiscales
+        }
+      }
+      
       return res.status(200).json(transaction);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
@@ -3600,9 +3713,55 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
       console.log("Objeto de transacción creado:", JSON.stringify(transactionData, null, 2));
       
       try {
-        // Intentar crear directamente la transacción sin validación Zod
+        // Crear la transacción principal
         const newTransaction = await storage.createTransaction(transactionData);
         console.log("Transacción creada exitosamente:", JSON.stringify(newTransaction, null, 2));
+        
+        // Si es un gasto con datos fiscales, guardar en la tabla de gastos fiscales
+        if (req.body.type === 'expense' && req.body.fiscalData) {
+          console.log("Guardando datos fiscales:", JSON.stringify(req.body.fiscalData, null, 2));
+          
+          try {
+            // Preparar datos para la tabla de gastos fiscales
+            const expenseData = {
+              userId: req.session.userId,
+              transactionId: newTransaction.id,
+              expenseNumber: `EXP-${new Date().getFullYear()}-${String(newTransaction.id).padStart(4, '0')}`,
+              description: req.body.description,
+              expenseDate: new Date(req.body.date),
+              totalAmount: req.body.amount.toString(),
+              netAmount: req.body.fiscalData.netAmount?.toString() || '0',
+              vatRate: req.body.fiscalData.vatRate?.toString() || '21',
+              vatAmount: req.body.fiscalData.vatAmount?.toString() || '0',
+              vatDeductiblePercent: req.body.fiscalData.vatDeductiblePercent?.toString() || '100',
+              irpfRate: req.body.fiscalData.irpfRate?.toString() || '0',
+              irpfAmount: req.body.fiscalData.irpfAmount?.toString() || '0',
+              deductibleForCorporateTax: req.body.fiscalData.deductibleForCorporateTax !== false,
+              deductibleForIrpf: req.body.fiscalData.deductibleForIrpf !== false,
+              deductiblePercent: req.body.fiscalData.deductiblePercent?.toString() || '100',
+              supplierName: req.body.fiscalData.supplierName || null,
+              supplierTaxId: req.body.fiscalData.supplierTaxId || null,
+              invoiceNumber: req.body.fiscalData.invoiceNumber || null,
+              createdFromOcr: false,
+              requiresReview: false,
+            };
+            
+            // Insertar en la tabla expenses usando Drizzle
+            const { db } = await import('./db');
+            const { expenses } = await import('../shared/enhanced-schema');
+            
+            const [createdExpense] = await db.insert(expenses).values(expenseData).returning();
+            console.log("Datos fiscales guardados exitosamente:", createdExpense);
+            
+            // Añadir los datos fiscales a la respuesta
+            (newTransaction as any).fiscalData = req.body.fiscalData;
+            
+          } catch (fiscalError) {
+            console.error("Error al guardar datos fiscales:", fiscalError);
+            // No fallamos toda la transacción por un error en datos fiscales
+            // Solo registramos el error
+          }
+        }
         
         // Notificar a todos los clientes conectados sobre la nueva transacción
         console.log("Actualizando estado del dashboard (transacción creada)");
@@ -3697,6 +3856,71 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         return res.status(404).json({ message: "Failed to update transaction" });
       }
       
+      // Si es un gasto con datos fiscales, actualizar/crear en la tabla de gastos fiscales
+      if (req.body.type === 'expense' && req.body.fiscalData) {
+        console.log("Actualizando datos fiscales:", JSON.stringify(req.body.fiscalData, null, 2));
+        
+        try {
+          // Preparar datos para la tabla de gastos fiscales
+          const expenseData = {
+            userId: req.session.userId,
+            transactionId: transactionId,
+            expenseNumber: `EXP-${new Date().getFullYear()}-${String(transactionId).padStart(4, '0')}`,
+            description: req.body.description,
+            expenseDate: new Date(req.body.date),
+            totalAmount: req.body.amount.toString(),
+            netAmount: req.body.fiscalData.netAmount?.toString() || '0',
+            vatRate: req.body.fiscalData.vatRate?.toString() || '21',
+            vatAmount: req.body.fiscalData.vatAmount?.toString() || '0',
+            vatDeductiblePercent: req.body.fiscalData.vatDeductiblePercent?.toString() || '100',
+            irpfRate: req.body.fiscalData.irpfRate?.toString() || '0',
+            irpfAmount: req.body.fiscalData.irpfAmount?.toString() || '0',
+            deductibleForCorporateTax: req.body.fiscalData.isDeductible !== false,
+            deductibleForIrpf: req.body.fiscalData.isDeductible !== false,
+            deductiblePercent: req.body.fiscalData.deductiblePercent?.toString() || '100',
+            supplierName: req.body.fiscalData.vendorName || null,
+            supplierTaxId: req.body.fiscalData.vendorId || null,
+            invoiceNumber: null, // Para gastos normales no hay número de factura
+            createdFromOcr: false,
+            requiresReview: false,
+          };
+          
+          // Importar dependencias
+          const { db } = await import('./db');
+          const { expenses } = await import('../shared/enhanced-schema');
+          const { eq } = await import('drizzle-orm');
+          
+          // Verificar si ya existe un registro para esta transacción
+          const existingExpense = await db
+            .select()
+            .from(expenses)
+            .where(eq(expenses.transactionId, transactionId))
+            .limit(1);
+          
+          if (existingExpense.length > 0) {
+            // Actualizar registro existente
+            const [updatedExpense] = await db
+              .update(expenses)
+              .set(expenseData)
+              .where(eq(expenses.transactionId, transactionId))
+              .returning();
+            console.log("Datos fiscales actualizados exitosamente:", updatedExpense);
+          } else {
+            // Crear nuevo registro
+            const [createdExpense] = await db.insert(expenses).values(expenseData).returning();
+            console.log("Datos fiscales creados exitosamente:", createdExpense);
+          }
+          
+          // Añadir los datos fiscales a la respuesta
+          (updatedTransaction as any).fiscalData = req.body.fiscalData;
+          
+        } catch (fiscalError) {
+          console.error("Error al actualizar datos fiscales:", fiscalError);
+          // No fallamos toda la transacción por un error en datos fiscales
+          // Solo registramos el error
+        }
+      }
+      
       // Notificar a todos los clientes conectados sobre la transacción actualizada
       console.log("Actualizando estado del dashboard (transacción actualizada)");
       
@@ -3743,21 +3967,108 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
         return res.status(403).json({ message: "Unauthorized to delete this transaction" });
       }
       
-      // Verificamos si hay que eliminar la factura asociada (según indicación del usuario)
-      // NOTA: Ya no eliminamos automáticamente las facturas al eliminar una transacción
-      // Esto permite mantener facturas pagadas en el sistema pero eliminar las transacciones asociadas
+      console.log(`🗑️ [DeleteTransaction] Iniciando eliminación de transacción ${transactionId}`);
+      console.log(`📋 [DeleteTransaction] Datos de la transacción:`, {
+        id: transaction.id,
+        description: transaction.description,
+        invoiceId: transaction.invoiceId,
+        notes: transaction.notes,
+        amount: transaction.amount,
+        type: transaction.type
+      });
       
-      // Primero eliminamos la referencia a la factura en la transacción
+      // Si la transacción está asociada a una factura, necesitamos decidir qué hacer
       if (transaction.invoiceId) {
-        // Actualizamos la transacción para quitar la referencia a la factura
+        console.log(`🔗 [DeleteTransaction] Transacción ${transactionId} asociada a factura ${transaction.invoiceId}`);
+        
         try {
-          await db.query(
-            'UPDATE transactions SET invoice_id = NULL WHERE id = $1',
-            [transactionId]
+          // Verificar si esta transacción fue generada automáticamente por la factura
+          // Mejorar la detección para ser más específica
+          const isAutoGenerated = (
+            // Verificar descripción
+            (transaction.description && (
+              transaction.description.includes("cobrada") || 
+              transaction.description.includes("Factura") ||
+              transaction.description.includes("Generado automáticamente")
+            )) ||
+            // Verificar notas
+            (transaction.notes && (
+              transaction.notes.includes("Generado automáticamente") ||
+              transaction.notes.includes("al crear la factura") ||
+              transaction.notes.includes("al marcar la factura")
+            )) ||
+            // Si es de tipo income y tiene invoiceId, muy probablemente es auto-generada
+            (transaction.type === 'income' && transaction.invoiceId)
           );
-          console.log(`Se eliminó la referencia a la factura ${transaction.invoiceId} en la transacción ${transactionId}`);
+          
+          console.log(`🤖 [DeleteTransaction] ¿Transacción generada automáticamente? ${isAutoGenerated}`);
+          console.log(`🔍 [DeleteTransaction] Criterios de detección:`, {
+            descripcionContienePalabras: transaction.description && (
+              transaction.description.includes("cobrada") || 
+              transaction.description.includes("Factura") ||
+              transaction.description.includes("Generado automáticamente")
+            ),
+            notasContienePalabras: transaction.notes && (
+              transaction.notes.includes("Generado automáticamente") ||
+              transaction.notes.includes("al crear la factura") ||
+              transaction.notes.includes("al marcar la factura")
+            ),
+            esIngresoConFactura: transaction.type === 'income' && transaction.invoiceId
+          });
+          
+          if (isAutoGenerated) {
+            // Si fue generada automáticamente, eliminamos también la factura para mantener consistencia
+            console.log(`📋 [DeleteTransaction] Eliminando factura ${transaction.invoiceId} asociada (transacción auto-generada)`);
+            
+            // Primero obtener los items de la factura para eliminarlos
+            try {
+              const invoiceItems = await storage.getInvoiceItemsByInvoiceId(transaction.invoiceId);
+              console.log(`📦 [DeleteTransaction] Eliminando ${invoiceItems.length} items de la factura`);
+              
+              for (const item of invoiceItems) {
+                await storage.deleteInvoiceItem(item.id);
+                console.log(`📦 [DeleteTransaction] Item ${item.id} eliminado`);
+              }
+            } catch (itemError) {
+              console.error(`❌ [DeleteTransaction] Error al eliminar items:`, itemError);
+            }
+            
+            // Eliminar la factura
+            try {
+              const invoiceDeleted = await storage.deleteInvoice(transaction.invoiceId);
+              console.log(`✅ [DeleteTransaction] Factura ${transaction.invoiceId} eliminada: ${invoiceDeleted}`);
+              
+              // Invalidar consultas del frontend para facturas
+              if (global.updateDashboardState) {
+                global.updateDashboardState('invoice-deleted', {
+                  invoiceId: transaction.invoiceId,
+                  transactionId: transactionId,
+                  timestamp: new Date().toISOString()
+                }, req.session.userId);
+              }
+              
+            } catch (invoiceError) {
+              console.error(`❌ [DeleteTransaction] Error al eliminar factura ${transaction.invoiceId}:`, invoiceError);
+            }
+            
+          } else {
+            // Si es una transacción manual, solo actualizamos el estado de la factura
+            console.log(`📋 [DeleteTransaction] Actualizando estado de factura ${transaction.invoiceId} (transacción manual)`);
+            
+            const invoice = await storage.getInvoice(transaction.invoiceId);
+            if (invoice && invoice.status === 'paid') {
+              await storage.updateInvoice(transaction.invoiceId, { status: 'sent' });
+              console.log(`✅ [DeleteTransaction] Estado de factura ${transaction.invoiceId} actualizado a "sent"`);
+            }
+            
+            // Eliminar la referencia a la factura en la transacción
+            await db.update(transactions)
+              .set({ invoiceId: null })
+              .where(eq(transactions.id, transactionId));
+          }
+          
         } catch (updateError) {
-          console.error(`Error al eliminar referencia a factura:`, updateError);
+          console.error(`❌ [DeleteTransaction] Error al gestionar factura asociada:`, updateError);
           // Continuamos con la eliminación aunque falle esta actualización
         }
       }
@@ -3767,6 +4078,8 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
       if (!deleted) {
         return res.status(500).json({ message: "Failed to delete transaction" });
       }
+      
+      console.log(`✅ [DeleteTransaction] Transacción ${transactionId} eliminada correctamente. Registros eliminados: ${deleted}`);
       
       // Notificar a todos los clientes conectados sobre la transacción eliminada
       console.log("Actualizando estado del dashboard (transacción eliminada)");
@@ -3789,7 +4102,7 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
       
       return res.status(200).json({ message: "Transaction deleted successfully" });
     } catch (error) {
-      console.error("Error al eliminar transacción:", error);
+      console.error("❌ [DeleteTransaction] Error al eliminar transacción:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5030,9 +5343,176 @@ app.put("/api/invoices/:id", async (req: Request, res: Response) => {
   // El servidor WebSocket ya está configurado anteriormente en el código
   console.log('Usando servidor WebSocket existente para actualizaciones del dashboard');
   
+  // Endpoint específico para datos fiscales deducibles del dashboard
+  app.get("/api/dashboard/fiscal-deducible", requiereDemoAuth, async (req: Request, res: Response) => {
+    try {
+      console.log("📊 Solicitando datos fiscales deducibles del dashboard");
+      
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = req.session.userId;
+      const { year, period } = req.query;
+      
+      // Obtener gastos con datos fiscales detallados
+      const expensesWithFiscalData = await db
+        .select({
+          transactionId: expenses.transactionId,
+          netAmount: expenses.netAmount,
+          vatAmount: expenses.vatAmount,
+          irpfAmount: expenses.irpfAmount,
+          deductibleForCorporateTax: expenses.deductibleForCorporateTax,
+          deductibleForIrpf: expenses.deductibleForIrpf,
+          deductiblePercent: expenses.deductiblePercent,
+          vatDeductiblePercent: expenses.vatDeductiblePercent,
+        })
+        .from(expenses)
+        .where(eq(expenses.userId, userId));
+      
+      // Obtener todas las transacciones de gastos
+      const allExpenseTransactions = await db
+        .select()
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            eq(transactions.type, "expense")
+          )
+        );
+      
+      // Calcular totales fiscales específicos
+      let totalGastosDeducibles = 0;
+      let totalIvaDeducible = 0;
+      let totalGastosBase = 0;
+      let totalIvaSoportado = 0;
+      
+      for (const transaction of allExpenseTransactions) {
+        const amount = parseFloat(transaction.amount || '0');
+        
+        // Buscar datos fiscales específicos
+        const fiscalData = expensesWithFiscalData.find(
+          e => e.transactionId === transaction.id
+        );
+        
+        if (fiscalData) {
+          // Usar datos fiscales reales
+          const baseAmount = parseFloat(fiscalData.netAmount || '0');
+          const vatAmount = parseFloat(fiscalData.vatAmount || '0');
+          
+          // Calcular gastos deducibles
+          if (fiscalData.deductibleForCorporateTax || fiscalData.deductibleForIrpf) {
+            const deductiblePercent = parseFloat(fiscalData.deductiblePercent || '100') / 100;
+            totalGastosDeducibles += baseAmount * deductiblePercent;
+          }
+          
+          // Calcular IVA deducible
+          const vatDeductiblePercent = parseFloat(fiscalData.vatDeductiblePercent || '100') / 100;
+          totalIvaDeducible += vatAmount * vatDeductiblePercent;
+          
+          totalGastosBase += baseAmount;
+          totalIvaSoportado += vatAmount;
+        } else {
+          // Para gastos sin datos fiscales, asumir 100% deducible
+          const baseAmount = amount / 1.21; // Estimar base sin IVA
+          const vatAmount = amount - baseAmount;
+          
+          totalGastosDeducibles += baseAmount;
+          totalIvaDeducible += vatAmount;
+          totalGastosBase += baseAmount;
+          totalIvaSoportado += vatAmount;
+        }
+      }
+      
+      // Obtener ingresos para calcular resultado fiscal
+      const incomeTransactions = await db
+        .select()
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            eq(transactions.type, "income")
+          )
+        );
+      
+      const totalIngresos = incomeTransactions.reduce((sum, t) => 
+        sum + parseFloat(t.amount || '0'), 0
+      );
+      
+      const baseImponibleIngresos = totalIngresos / 1.21; // Estimar base sin IVA
+      const ivaRepercutido = totalIngresos - baseImponibleIngresos;
+      
+      // Calcular resultados fiscales específicos
+      const resultadoFiscal = baseImponibleIngresos - totalGastosDeducibles;
+      const ivaAIngresar = ivaRepercutido - totalIvaDeducible;
+      
+      const responseData = {
+        baseImponibleIngresos: Math.round(baseImponibleIngresos),
+        totalGastosBase: Math.round(totalGastosBase),
+        gastosDeducibles: Math.round(totalGastosDeducibles),
+        ivaRepercutido: Math.round(ivaRepercutido),
+        totalIvaSoportado: Math.round(totalIvaSoportado),
+        ivaDeducible: Math.round(totalIvaDeducible),
+        resultadoFiscal: Math.round(resultadoFiscal),
+        ivaAIngresar: Math.round(ivaAIngresar),
+        year: year || new Date().getFullYear().toString(),
+        period: period || 'all'
+      };
+      
+      console.log("📊 Datos fiscales calculados:", responseData);
+      
+      return res.status(200).json(responseData);
+      
+    } catch (error) {
+      console.error("❌ Error al calcular datos fiscales deducibles:", error);
+      return res.status(500).json({ 
+        message: "Error al calcular datos fiscales",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // ENDPOINT TEMPORAL DE DEBUG PARA REVISAR GASTOS
+  app.get("/api/debug/expenses", async (req: Request, res: Response) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { db } = await import('./db');
+      const { expenses } = await import('../shared/enhanced-schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const userExpenses = await db
+        .select()
+        .from(expenses)
+        .where(eq(expenses.userId, req.session.userId));
+      
+      console.log(`🔍 DEBUG: Encontrados ${userExpenses.length} gastos para usuario ${req.session.userId}`);
+      
+      userExpenses.forEach((expense, index) => {
+        console.log(`🔍 Gasto ${index + 1}:`, {
+          id: expense.id,
+          transactionId: expense.transactionId,
+          description: expense.description,
+          netAmount: expense.netAmount,
+          vatAmount: expense.vatAmount,
+          irpfAmount: expense.irpfAmount,
+          totalAmount: expense.totalAmount,
+          vatDeductiblePercent: expense.vatDeductiblePercent,
+          deductiblePercent: expense.deductiblePercent
+        });
+      });
+      
+      return res.status(200).json({
+        count: userExpenses.length,
+        expenses: userExpenses
+      });
+    } catch (error) {
+      console.error("Error en debug endpoint:", error);
+      return res.status(500).json({ message: "Error interno" });
+    }
+  });
+
   return httpServer;
 }
-// Nueva implementación simplificada del endpoint de dashboard
-// Añadir al final de routes.ts
-
-// Final de routes.ts

@@ -736,8 +736,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateCompany(id: number, companyData: Partial<InsertCompany>): Promise<Company | undefined> {
-    const result = await db.update(companies).set(companyData).where(eq(companies.id, id)).returning();
+  async updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined> {
+    const result = await db.update(companies).set(company).where(eq(companies.id, id)).returning();
     return result[0];
   }
 
@@ -755,8 +755,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateClient(id: number, clientData: Partial<InsertClient>): Promise<Client | undefined> {
-    const result = await db.update(clients).set(clientData).where(eq(clients.id, id)).returning();
+  async updateClient(id: number, client: Partial<InsertClient>): Promise<Client | undefined> {
+    const result = await db.update(clients).set(client).where(eq(clients.id, id)).returning();
     return result[0];
   }
   
@@ -927,8 +927,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateInvoice(id: number, invoiceData: Partial<InsertInvoice>): Promise<Invoice | undefined> {
-    const result = await db.update(invoices).set(invoiceData).where(eq(invoices.id, id)).returning();
+  async updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined> {
+    const result = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
     return result[0];
   }
 
@@ -1150,8 +1150,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTransaction(id: number): Promise<boolean> {
-    const result = await db.delete(transactions).where(eq(transactions.id, id)).returning();
-    return result.length > 0;
+    try {
+      console.log(`🗑️ [DeleteTransaction] Iniciando eliminación de transacción ${id}`);
+      
+      // Eliminar directamente la transacción
+      const result = await db.delete(transactions).where(eq(transactions.id, id)).returning();
+      const success = result.length > 0;
+      
+      if (success) {
+        console.log(`✅ [DeleteTransaction] Transacción ${id} eliminada correctamente. Registros eliminados: ${result.length}`);
+      } else {
+        console.log(`⚠️ [DeleteTransaction] No se pudo eliminar la transacción ${id}. Posiblemente ya no existe.`);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error(`❌ [DeleteTransaction] Error eliminando transacción ${id}:`, error);
+      return false;
+    }
   }
 
   async getTask(id: number): Promise<Task | undefined> {
