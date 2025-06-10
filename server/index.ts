@@ -1,6 +1,8 @@
-// Cargar variables de entorno desde .env
-import dotenv from 'dotenv';
-dotenv.config();
+// En producción no necesitamos dotenv - usamos variables del sistema
+// En desarrollo usamos dotenv
+if (process.env.NODE_ENV !== 'production') {
+  import('dotenv').then(dotenv => dotenv.config());
+}
 
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
