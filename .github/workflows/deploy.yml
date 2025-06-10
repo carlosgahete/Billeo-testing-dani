@@ -20,15 +20,23 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Install dependencies
+      - name: Install all dependencies
         run: npm ci
       
-      - name: Build frontend
+      - name: Build frontend and backend
         run: |
+          # Build frontend
           cd client
           npm ci
           npm run build
-          ls -la ../dist/
+          cd ..
+          
+          # Build backend (esto genera dist/index.js)
+          npm run build
+          
+          # Verificar que todo está compilado
+          ls -la dist/
+          ls -la dist/public/
       
       - name: Setup SSH key
         run: |
@@ -39,11 +47,21 @@ jobs:
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
           echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
       
-      - name: Deploy to Lightsail
+      - name: Deploy compiled app to server
         run: |
-          # Subir código del servidor
+          # Crear directorio
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'mkdir -p /home/ubuntu/billeo'
-          rsync -avz --exclude 'node_modules' --exclude '.git' --exclude 'client/node_modules' . ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/
           
-          # Instalar dependencias y reiniciar app
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'cd /home/ubuntu/billeo && npm install && pm2 restart billeo || pm2 start server/index.ts --name billeo --interpreter tsx' 
+          # Subir solo archivos necesarios para producción
+          rsync -avz dist/ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/dist/
+          rsync -avz package.json ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/
+          rsync -avz database.db ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/ || echo "No database.db found"
+          rsync -avz uploads/ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/ubuntu/billeo/uploads/ || echo "No uploads found"
+      
+      - name: Install production dependencies and start app
+        run: |
+          # Solo instalar dependencias de runtime (mucho más rápido)
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'cd /home/ubuntu/billeo && npm install --production --only=prod'
+          
+          # Iniciar aplicación compilada
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} 'cd /home/ubuntu/billeo && pm2 restart billeo || pm2 start dist/index.js --name billeo' 
