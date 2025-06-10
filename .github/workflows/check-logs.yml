@@ -1,0 +1,39 @@
+name: Check Server Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-logs:
+    name: Check PM2 and Application Logs
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check PM2 Status and Logs
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== PM2 Status ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 status'
+          
+          echo "=== PM2 Logs (last 50 lines) ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 logs --lines 50'
+          
+          echo "=== Check if app is listening on port ==="
+          ssh $SSH_USER@$SERVER_IP 'netstat -tlnp | grep :3000 || echo "No process listening on port 3000"'
+          ssh $SSH_USER@$SERVER_IP 'netstat -tlnp | grep :5000 || echo "No process listening on port 5000"'
+          
+          echo "=== Check deployment files ==="
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/ubuntu/billeo/'
+          ssh $SSH_USER@$SERVER_IP 'cat /home/ubuntu/billeo/package.json'
+          
+          echo "=== Check if Node.js process is running ==="
+          ssh $SSH_USER@$SERVER_IP 'ps aux | grep node' 
