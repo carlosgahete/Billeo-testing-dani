@@ -33,62 +33,48 @@ jobs:
       
       - name: Build backend with esbuild
         run: |
-          # Crear build optimizado del backend
-          npx esbuild server/index.ts \
-            --platform=node \
-            --bundle \
-            --format=esm \
-            --outfile=dist/server.js \
-            --external:canvas \
-            --external:tesseract.js \
-            --external:sqlite3 \
-            --external:better-sqlite3 \
-            --external:dotenv \
-            --define:process.env.NODE_ENV=\"production\"
+          # NO HACER BUNDLE - solo copiar código fuente
+          # El bundle de esbuild tiene problemas con dotenv
+          echo "Skipping esbuild bundle - using tsx directly"
       
       - name: Prepare deployment package
         run: |
           # Crear directorio de deployment
           mkdir -p deploy-package
           
-          # Copiar archivos compilados
+          # Copiar todo el código fuente del servidor (no bundleado)
+          cp -r server deploy-package/
+          cp -r db deploy-package/ 2>/dev/null || true
+          
+          # Copiar frontend compilado
           cp -r dist deploy-package/
           
-          # Copiar package.json y package-lock.json solo con dependencias runtime
+          # Crear package.json optimizado con TODAS las dependencias necesarias
           cat package.json | jq '
             {
               name: .name,
               version: .version,
               type: .type,
-              scripts: {start: "node dist/server.js"},
-              dependencies: {
-                canvas: .dependencies.canvas,
-                "tesseract.js": .dependencies["tesseract.js"],
-                ws: .dependencies.ws,
-                bcrypt: .dependencies.bcrypt,
-                "express-session": .dependencies["express-session"],
-                "connect-pg-simple": .dependencies["connect-pg-simple"],
-                postgres: .dependencies.postgres,
-                memorystore: .dependencies.memorystore
-              }
+              scripts: {start: "tsx server/index.ts"},
+              dependencies: .dependencies
             }
           ' > deploy-package/package.json
           
-          # Copiar otros archivos necesarios
-          cp -r server/db deploy-package/ 2>/dev/null || true
+          # Copiar archivos de configuración
           cp .env.example deploy-package/.env 2>/dev/null || true
           
-          # Crear archivo de inicio simple
+          # Crear archivo de inicio optimizado
           echo '#!/bin/bash
           cd /home/ubuntu/billeo
           export NODE_ENV=production
           export PORT=3000
-          node dist/server.js' > deploy-package/start.sh
+          tsx server/index.ts' > deploy-package/start.sh
           chmod +x deploy-package/start.sh
           
           # Verificar contenido
           ls -la deploy-package/
-          cat deploy-package/package.json
+          echo "=== Package.json dependencies count ==="
+          cat deploy-package/package.json | jq '.dependencies | length'
 
       - name: Setup SSH key
         run: |
@@ -111,7 +97,10 @@ jobs:
           # Copiar package completo (como .NET publish)
           rsync -avz ./deploy-package/ $SSH_USER@$SERVER_IP:/home/ubuntu/billeo/
           
-          # Solo instalar dependencias runtime mínimas (canvas, tesseract, ws)
+          # Instalar tsx globalmente para poder ejecutar TypeScript directamente
+          ssh $SSH_USER@$SERVER_IP 'npm install -g tsx'
+          
+          # Instalar dependencias completas (pero más rápido que antes porque no hay compilación pesada)
           ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && npm install --production'
           
           # Configurar nginx
@@ -144,4 +133,4 @@ jobs:
           ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
           
           # Iniciar aplicación con el archivo compilado
-          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && pm2 start npm --name billeo -- start' 
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && pm2 start tsx --name billeo -- server/index.ts' 
