@@ -98,7 +98,7 @@ jobs:
           rsync -avz ./deploy-package/ $SSH_USER@$SERVER_IP:/home/ubuntu/billeo/
           
           # Instalar tsx globalmente para poder ejecutar TypeScript directamente
-          ssh $SSH_USER@$SERVER_IP 'npm install -g tsx'
+          ssh $SSH_USER@$SERVER_IP 'sudo npm install -g tsx'
           
           # Instalar dependencias completas (pero más rápido que antes porque no hay compilación pesada)
           ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && npm install --production'
