@@ -1,0 +1,42 @@
+name: Check App Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-logs:
+    name: Check PM2 Logs and App Status
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check PM2 Status and Logs
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== PM2 Status ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 status'
+          
+          echo -e "\n=== PM2 Logs (last 30 lines) ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 logs billeo-new --lines 30'
+          
+          echo -e "\n=== Check what ports are listening ==="
+          ssh $SSH_USER@$SERVER_IP 'netstat -tlnp | grep LISTEN'
+          
+          echo -e "\n=== Check if any Node process is running ==="
+          ssh $SSH_USER@$SERVER_IP 'ps aux | grep node | grep -v grep'
+          
+          echo -e "\n=== Check app directory ==="
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/ubuntu/billeo-new/'
+          
+          echo -e "\n=== Try to start manually to see errors ==="
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo-new && PORT=3000 NODE_ENV=production tsx server/index.ts &'
+          sleep 5
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost:3000 || echo "Local test failed"' 
