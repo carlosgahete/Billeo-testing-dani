@@ -29,7 +29,8 @@ jobs:
           cp -r server deploy-simple/
           cp -r dist deploy-simple/
           cp package.json deploy-simple/
-          echo '{"name":"billeo","type":"module","scripts":{"start":"tsx server/index.ts"},"dependencies":{"tsx":"^4.19.1"}}' > deploy-simple/package.json
+          jq '.scripts.start = "tsx server/index.ts"' deploy-simple/package.json > deploy-simple/package.json.tmp
+          mv deploy-simple/package.json.tmp deploy-simple/package.json
           echo "Package prepared"
       
       - name: Setup SSH
