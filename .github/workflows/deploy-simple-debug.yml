@@ -29,7 +29,7 @@ jobs:
           cp -r server deploy-simple/
           cp -r dist deploy-simple/
           cp package.json deploy-simple/
-          echo '{"name":"billeo","type":"module","scripts":{"start":"tsx server/index.ts"},"dependencies":{}}' > deploy-simple/package.json
+          echo '{"name":"billeo","type":"module","scripts":{"start":"tsx server/index.ts"},"dependencies":{"tsx":"^4.19.1"}}' > deploy-simple/package.json
           echo "Package prepared"
       
       - name: Setup SSH
@@ -65,6 +65,8 @@ jobs:
         run: |
           echo "=== Installing tsx globally ==="
           ssh $SSH_USER@$SERVER_IP 'sudo npm install -g tsx || echo "tsx might already be installed"'
+          echo "=== Installing local dependencies ==="
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo-new && npm install'
           echo "tsx installation completed"
 
       - name: Step 4 - Basic nginx config
@@ -83,6 +85,6 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           echo "=== Starting application ==="
-          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo-new && PORT=3000 NODE_ENV=production pm2 start tsx --name billeo-new -- server/index.ts'
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo-new && PORT=3000 NODE_ENV=production pm2 start npm --name billeo-new -- start'
           ssh $SSH_USER@$SERVER_IP 'pm2 status'
           echo "Application started successfully" 
