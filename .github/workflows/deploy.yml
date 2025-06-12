@@ -87,7 +87,12 @@ jobs:
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
+        timeout-minutes: 10
         run: |
+          # Verificar recursos antes de deployment
+          echo "=== Checking server resources ==="
+          ssh $SSH_USER@$SERVER_IP 'free -h && df -h'
+          
           # Detener aplicación actual
           ssh $SSH_USER@$SERVER_IP 'pm2 stop billeo || true'
           
@@ -100,8 +105,9 @@ jobs:
           # Instalar tsx globalmente para poder ejecutar TypeScript directamente
           ssh $SSH_USER@$SERVER_IP 'sudo npm install -g tsx'
           
-          # Instalar dependencias completas (pero más rápido que antes porque no hay compilación pesada)
-          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && npm install --production'
+          # Instalar dependencias completas con timeout
+          echo "=== Installing dependencies (with timeout) ==="
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo && timeout 300 npm install --production || echo "npm install timed out or failed"'
           
           # Configurar nginx
           ssh $SSH_USER@$SERVER_IP 'sudo tee /etc/nginx/sites-available/default > /dev/null <<EOF

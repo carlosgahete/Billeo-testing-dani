@@ -1,0 +1,88 @@
+name: Deploy Simple Debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-deploy:
+    name: Debug Deploy Step by Step
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install and build
+        run: |
+          npm ci
+          cd client && npm ci && npm run build && cd ..
+          echo "Build completed successfully"
+      
+      - name: Prepare simple package
+        run: |
+          mkdir -p deploy-simple
+          cp -r server deploy-simple/
+          cp -r dist deploy-simple/
+          cp package.json deploy-simple/
+          echo '{"name":"billeo","type":"module","scripts":{"start":"tsx server/index.ts"},"dependencies":{}}' > deploy-simple/package.json
+          echo "Package prepared"
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Step 1 - Stop PM2
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Stopping PM2 ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 stop billeo || true'
+          echo "PM2 stopped successfully"
+
+      - name: Step 2 - Deploy files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Deploying files ==="
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/ubuntu/billeo-new && rm -rf /home/ubuntu/billeo-new/*'
+          rsync -avz ./deploy-simple/ $SSH_USER@$SERVER_IP:/home/ubuntu/billeo-new/
+          echo "Files deployed successfully"
+
+      - name: Step 3 - Install tsx globally
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Installing tsx globally ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo npm install -g tsx || echo "tsx might already be installed"'
+          echo "tsx installation completed"
+
+      - name: Step 4 - Basic nginx config
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Configuring nginx ==="
+          ssh $SSH_USER@$SERVER_IP 'echo "server { listen 80; location / { proxy_pass http://localhost:3000; } }" | sudo tee /etc/nginx/sites-available/default'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+          echo "nginx configured successfully"
+
+      - name: Step 5 - Start application
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Starting application ==="
+          ssh $SSH_USER@$SERVER_IP 'cd /home/ubuntu/billeo-new && PORT=3000 NODE_ENV=production pm2 start tsx --name billeo-new -- server/index.ts'
+          ssh $SSH_USER@$SERVER_IP 'pm2 status'
+          echo "Application started successfully" 

@@ -1,0 +1,72 @@
+name: Fix Server Resources
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-resources:
+    name: Add Swap and Install System Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check current resources
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Current Memory and Disk ==="
+          ssh $SSH_USER@$SERVER_IP 'free -h && df -h'
+          
+      - name: Add 1GB Swap File
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Adding 1GB Swap ==="
+          ssh $SSH_USER@$SERVER_IP '
+            sudo fallocate -l 1G /swapfile
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
+          '
+          echo "Swap added successfully"
+
+      - name: Install System Dependencies
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Installing System Dependencies ==="
+          ssh $SSH_USER@$SERVER_IP '
+            sudo apt update && sudo apt install -y \
+              build-essential \
+              libcairo2-dev \
+              libpango1.0-dev \
+              libjpeg-dev \
+              libgif-dev \
+              librsvg2-dev \
+              libvips-dev \
+              tesseract-ocr \
+              python3-dev \
+              pkg-config
+          '
+          echo "System dependencies installed successfully"
+
+      - name: Verify Resources
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Verifying Resources ==="
+          ssh $SSH_USER@$SERVER_IP 'free -h && swapon --show'
+          echo "=== Checking system dependencies ==="
+          ssh $SSH_USER@$SERVER_IP 'pkg-config --exists cairo && echo "✅ Cairo found" || echo "❌ Cairo missing"'
+          ssh $SSH_USER@$SERVER_IP 'tesseract --version | head -1' 
