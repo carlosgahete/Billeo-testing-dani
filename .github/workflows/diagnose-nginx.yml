@@ -1,0 +1,75 @@
+name: Diagnose Nginx Issue
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Complete Nginx and App Diagnosis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check application status
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CHECKING APPLICATION STATUS ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 list'
+          echo ""
+          echo "=== CHECKING PORT 3000 ==="
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost:3000 || echo "Port 3000 not responding"'
+          echo ""
+          echo "=== CHECKING PROCESSES ON PORT 3000 ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo netstat -tlnp | grep :3000 || echo "No process on port 3000"'
+
+      - name: Check nginx status and configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== NGINX STATUS ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl status nginx'
+          echo ""
+          echo "=== NGINX CONFIGURATION ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo cat /etc/nginx/sites-available/default'
+          echo ""
+          echo "=== NGINX ERROR LOG ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo tail -20 /var/log/nginx/error.log'
+          echo ""
+          echo "=== NGINX ACCESS LOG ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo tail -10 /var/log/nginx/access.log'
+
+      - name: Test nginx configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== TESTING NGINX CONFIG ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          echo ""
+          echo "=== TESTING PORT 80 ==="
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost || echo "Port 80 not responding"'
+          echo ""
+          echo "=== CHECKING PROCESSES ON PORT 80 ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo netstat -tlnp | grep :80 || echo "No process on port 80"'
+
+      - name: Check system resources
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== SYSTEM RESOURCES ==="
+          ssh $SSH_USER@$SERVER_IP 'free -h'
+          echo ""
+          ssh $SSH_USER@$SERVER_IP 'df -h'
+          echo ""
+          echo "=== RECENT SYSTEM LOGS ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo journalctl --since "10 minutes ago" --no-pager | tail -20' 
