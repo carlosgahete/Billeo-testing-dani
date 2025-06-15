@@ -1,0 +1,179 @@
+name: Fix Static Files PWA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-static:
+    name: Fix Static Files for PWA
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Find and fix static files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== FINDING CORRECT BILLEO APP DIRECTORY ==="
+          
+          # Find the main billeo app directory (not node_modules)
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "billeo*" -type d | grep -v node_modules | head -5'
+          
+          # Check specifically for billeo-app directory
+          BILLEO_DIR=$(ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "billeo-app" -type d | head -1')
+          
+          if [ -z "$BILLEO_DIR" ]; then
+            echo "Checking for app directory..."
+            BILLEO_DIR=$(ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "app" -type d | grep -v node_modules | head -1')
+          fi
+          
+          if [ -z "$BILLEO_DIR" ]; then
+            echo "Using default structure..."
+            BILLEO_DIR="/home/$SSH_USER/app"
+          fi
+          
+          echo "Using app directory: $BILLEO_DIR"
+          
+          # Upload PWA files to the correct location
+          echo "Uploading PWA files to correct location..."
+          ssh $SSH_USER@$SERVER_IP "mkdir -p $BILLEO_DIR/client/public"
+          ssh $SSH_USER@$SERVER_IP "mkdir -p $BILLEO_DIR/client/src"
+          
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/public/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/public/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/public/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/public/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/public/
+          scp client/index.html $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/
+          scp client/src/main.tsx $SSH_USER@$SERVER_IP:$BILLEO_DIR/client/src/
+          
+          # Also try copying to the build/dist directory
+          BUILD_DIR=$(ssh $SSH_USER@$SERVER_IP "find $BILLEO_DIR -name 'dist' -type d | head -1")
+          if [ ! -z "$BUILD_DIR" ]; then
+            echo "Found build directory: $BUILD_DIR"
+            ssh $SSH_USER@$SERVER_IP "mkdir -p $BUILD_DIR/public"
+            scp client/public/manifest.json $SSH_USER@$SERVER_IP:$BUILD_DIR/
+            scp client/public/sw.js $SSH_USER@$SERVER_IP:$BUILD_DIR/
+            scp client/public/offline.html $SSH_USER@$SERVER_IP:$BUILD_DIR/
+            scp client/public/icon-192.png $SSH_USER@$SERVER_IP:$BUILD_DIR/
+            scp client/public/icon-512.png $SSH_USER@$SERVER_IP:$BUILD_DIR/
+            scp client/index.html $SSH_USER@$SERVER_IP:$BUILD_DIR/
+          fi
+
+      - name: Configure nginx for PWA files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CONFIGURING NGINX FOR PWA FILES ==="
+          
+          # Add specific PWA file handling to nginx
+          ssh $SSH_USER@$SERVER_IP 'sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup'
+          
+          ssh $SSH_USER@$SERVER_IP 'sudo tee /etc/nginx/sites-available/default > /dev/null << EOF
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name app.billeo.es;
+              return 301 https://\$server_name\$request_uri;
+          }
+          
+          server {
+              listen 443 ssl http2;
+              listen [::]:443 ssl http2;
+              server_name app.billeo.es;
+              
+              # SSL configuration
+              ssl_certificate /etc/letsencrypt/live/app.billeo.es/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/app.billeo.es/privkey.pem;
+              include /etc/letsencrypt/options-ssl-nginx.conf;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+              
+              # Security headers
+              add_header X-Frame-Options SAMEORIGIN;
+              add_header X-Content-Type-Options nosniff;
+              add_header X-XSS-Protection "1; mode=block";
+              add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+              
+              # PWA specific files with correct MIME types
+              location = /manifest.json {
+                  alias /home/$SSH_USER/app/client/public/manifest.json;
+                  add_header Content-Type application/manifest+json;
+                  add_header Cache-Control "public, max-age=86400";
+              }
+              
+              location = /sw.js {
+                  alias /home/$SSH_USER/app/client/public/sw.js;
+                  add_header Content-Type application/javascript;
+                  add_header Cache-Control "public, max-age=0";
+              }
+              
+              location = /offline.html {
+                  alias /home/$SSH_USER/app/client/public/offline.html;
+                  add_header Content-Type text/html;
+              }
+              
+              location ~ ^/(icon-.*\.png|favicon\.png)$ {
+                  root /home/$SSH_USER/app/client/public;
+                  add_header Content-Type image/png;
+                  add_header Cache-Control "public, max-age=31536000";
+              }
+              
+              # Main app proxy
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto https;
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_connect_timeout 60s;
+                  proxy_send_timeout 60s;
+                  proxy_read_timeout 60s;
+                  proxy_cache_bypass \$http_upgrade;
+              }
+          }
+          EOF'
+          
+          # Test and reload nginx
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+
+      - name: Verify PWA files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING PWA FILES ==="
+          
+          sleep 5
+          
+          echo "Testing manifest.json:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/manifest.json | head -3'
+          
+          echo ""
+          echo "Testing service worker:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/sw.js | head -3'
+          
+          echo ""
+          echo "Testing offline page:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/offline.html'
+          
+          echo ""
+          echo "Testing icons:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/icon-192.png'
+          
+          echo ""
+          echo "✅ PWA static files configuration complete!" 
