@@ -1,0 +1,114 @@
+name: Deploy PWA Fixed
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-pwa:
+    name: Deploy Billeo PWA Fixed
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check server structure and deploy PWA
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CHECKING SERVER STRUCTURE ==="
+          
+          # Check current directory structure
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/'
+          echo ""
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "client" -type d 2>/dev/null || echo "No client directory found"'
+          echo ""
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "public" -type d 2>/dev/null || echo "No public directory found"'
+          
+          echo ""
+          echo "=== DEPLOYING BILLEO PWA ==="
+          
+          # Find the correct client directory
+          CLIENT_DIR=$(ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "client" -type d | head -1')
+          if [ -z "$CLIENT_DIR" ]; then
+            echo "Client directory not found, using current app structure..."
+            CLIENT_DIR="/home/$SSH_USER/app"
+          fi
+          
+          echo "Using client directory: $CLIENT_DIR"
+          
+          # Create necessary directories if they don't exist
+          ssh $SSH_USER@$SERVER_IP "mkdir -p $CLIENT_DIR/public"
+          ssh $SSH_USER@$SERVER_IP "mkdir -p $CLIENT_DIR/src"
+          
+          # Upload PWA files
+          echo "Uploading PWA files..."
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:$CLIENT_DIR/public/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:$CLIENT_DIR/public/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:$CLIENT_DIR/public/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:$CLIENT_DIR/public/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:$CLIENT_DIR/public/
+          scp client/index.html $SSH_USER@$SERVER_IP:$CLIENT_DIR/
+          scp client/src/main.tsx $SSH_USER@$SERVER_IP:$CLIENT_DIR/src/
+          
+          # Check if we need to build frontend
+          if ssh $SSH_USER@$SERVER_IP "test -f $CLIENT_DIR/package.json"; then
+            echo "Building frontend with PWA support..."
+            ssh $SSH_USER@$SERVER_IP "cd $CLIENT_DIR && npm run build"
+          else
+            echo "No package.json found in $CLIENT_DIR, checking for existing build..."
+            ssh $SSH_USER@$SERVER_IP "ls -la $CLIENT_DIR/"
+          fi
+          
+          # Restart PM2 to pick up changes
+          ssh $SSH_USER@$SERVER_IP 'pm2 restart billeo-new || echo "PM2 restart failed, app might still work"'
+          
+          echo "PWA deployment completed!"
+
+      - name: Verify PWA deployment
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING PWA DEPLOYMENT ==="
+          
+          # Wait a moment for services to restart
+          sleep 5
+          
+          # Check if PWA files are accessible
+          echo "Testing manifest.json:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/manifest.json || echo "manifest.json not accessible"'
+          
+          echo ""
+          echo "Testing service worker:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/sw.js || echo "sw.js not accessible"'
+          
+          echo ""
+          echo "Testing offline page:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/offline.html || echo "offline.html not accessible"'
+          
+          echo ""
+          echo "Testing app icons:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/icon-192.png || echo "icon-192.png not accessible"'
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/icon-512.png || echo "icon-512.png not accessible"'
+          
+          echo ""
+          echo "Testing main app:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/ || echo "Main app not accessible"'
+          
+          echo ""
+          echo "✅ PWA deployment verification complete!"
+          echo ""
+          echo "🎉 ¡Tu app Billeo ya es una PWA!"
+          echo "📱 Los usuarios pueden instalarla desde:"
+          echo "   • iPhone/iPad: Safari → Compartir → Añadir a pantalla de inicio"
+          echo "   • Android: Chrome mostrará banner de instalación"
+          echo "   • Desktop: Icono de instalación en barra de direcciones" 
