@@ -1,0 +1,55 @@
+name: Fix Nginx Configuration
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-nginx:
+    name: Fix Nginx Proxy Configuration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Fix nginx configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Fixing nginx configuration ==="
+          ssh $SSH_USER@$SERVER_IP 'cat > /tmp/nginx-config << EOF
+          server {
+              listen 80 default_server;
+              listen [::]:80 default_server;
+              
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+                  proxy_cache_bypass \$http_upgrade;
+              }
+          }
+          EOF'
+          
+          ssh $SSH_USER@$SERVER_IP 'sudo cp /tmp/nginx-config /etc/nginx/sites-available/default'
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+          echo "Nginx configuration fixed successfully"
+
+      - name: Test configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Testing nginx configuration ==="
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost || echo "Test failed"' 
