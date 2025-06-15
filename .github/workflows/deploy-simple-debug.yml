@@ -59,6 +59,21 @@ jobs:
           cp -r dist deploy-simple/
           cp package.json deploy-simple/
           cp tsconfig.json deploy-simple/
+          # Crear archivo .env con configuración para PostgreSQL/Neon
+          cat > deploy-simple/.env << EOF
+          NODE_ENV=production
+          PORT=3000
+          DATABASE_URL=postgresql://neondb_owner:npg_LX7Mp8DBhOjZ@ep-bitter-grass-a233ofcn-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require
+          SESSION_SECRET=billeo-production-secret-$(date +%s)
+          APP_URL=http://15.237.210.247
+          DOMAIN=15.237.210.247
+          FRONTEND_URL=http://15.237.210.247
+          UPLOAD_DIR=./uploads
+          MAX_FILE_SIZE=50MB
+          GOOGLE_CLOUD_CREDENTIALS=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
+          DEBUG=false
+          EOF
+          # Mantener las dependencias originales pero actualizar el script de inicio
           jq '.scripts.start = "tsx server/index.ts"' deploy-simple/package.json > deploy-simple/package.json.tmp
           mv deploy-simple/package.json.tmp deploy-simple/package.json
           echo "Package prepared"
@@ -87,6 +102,8 @@ jobs:
           echo "=== Deploying files ==="
           ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/ubuntu/billeo-new && rm -rf /home/ubuntu/billeo-new/*'
           rsync -avz ./deploy-simple/ $SSH_USER@$SERVER_IP:/home/ubuntu/billeo-new/
+          # Crear carpeta uploads si no existe
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/ubuntu/billeo-new/uploads'
           echo "Files deployed successfully"
 
       - name: Step 3 - Install tsx globally
