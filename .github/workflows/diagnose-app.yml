@@ -1,0 +1,75 @@
+name: Diagnose Application
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Diagnose Application Status
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check PM2 Status
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== PM2 Status ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 status'
+
+      - name: Check PM2 Logs
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== PM2 Logs (last 50 lines) ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 logs billeo-new --lines 50'
+
+      - name: Check if app is listening on port 3000
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Checking port 3000 ==="
+          ssh $SSH_USER@$SERVER_IP 'netstat -tlnp | grep :3000 || echo "Port 3000 not listening"'
+
+      - name: Check nginx status
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Nginx Status ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl status nginx'
+
+      - name: Check nginx configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Nginx Configuration ==="
+          ssh $SSH_USER@$SERVER_IP 'cat /etc/nginx/sites-available/default'
+
+      - name: Test direct connection to app
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Testing direct connection to localhost:3000 ==="
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost:3000 || echo "Cannot connect to localhost:3000"'
+
+      - name: Check application files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== Application files ==="
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/ubuntu/billeo-new/'
+          echo "=== Package.json ==="
+          ssh $SSH_USER@$SERVER_IP 'cat /home/ubuntu/billeo-new/package.json' 
