@@ -1,0 +1,126 @@
+name: Fix Safari Compatibility
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-safari:
+    name: Fix Safari Compatibility
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Check current configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CURRENT NGINX CONFIGURATION ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo cat /etc/nginx/sites-available/default'
+          echo ""
+          echo "=== TESTING FROM SERVER ==="
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://app.billeo.es'
+
+      - name: Update nginx configuration for Safari compatibility
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== UPDATING NGINX FOR SAFARI COMPATIBILITY ==="
+          
+          ssh $SSH_USER@$SERVER_IP 'sudo tee /etc/nginx/sites-available/default > /dev/null << EOF
+          server {
+              listen 80;
+              listen [::]:80;
+              
+              server_name app.billeo.es 15.237.210.247 _;
+              
+              # Add security headers for Safari
+              add_header X-Frame-Options SAMEORIGIN;
+              add_header X-Content-Type-Options nosniff;
+              add_header X-XSS-Protection "1; mode=block";
+              
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  
+                  # Essential headers for Safari
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+                  proxy_set_header X-Forwarded-Host \$server_name;
+                  
+                  # WebSocket support
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  
+                  # Timeout settings
+                  proxy_connect_timeout 60s;
+                  proxy_send_timeout 60s;
+                  proxy_read_timeout 60s;
+                  
+                  # Buffer settings for Safari
+                  proxy_buffering on;
+                  proxy_buffer_size 4k;
+                  proxy_buffers 8 4k;
+                  proxy_busy_buffers_size 8k;
+                  
+                  # Cache bypass
+                  proxy_cache_bypass \$http_upgrade;
+                  
+                  # Additional Safari compatibility
+                  proxy_set_header Accept-Encoding "";
+              }
+              
+              # Handle favicon requests
+              location /favicon.ico {
+                  proxy_pass http://127.0.0.1:3000/favicon.ico;
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+              }
+              
+              # Error pages
+              error_page 502 503 504 /50x.html;
+              location = /50x.html {
+                  root /var/www/html;
+              }
+          }
+          EOF'
+          
+          echo "=== TESTING CONFIGURATION ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          
+          echo "=== RELOADING NGINX ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+
+      - name: Verify Safari compatibility
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING SAFARI COMPATIBILITY ==="
+          
+          # Wait for nginx to reload
+          sleep 3
+          
+          echo "Testing HTTP response headers:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://app.billeo.es'
+          
+          echo ""
+          echo "Testing with different User-Agent (Safari-like):"
+          ssh $SSH_USER@$SERVER_IP 'curl -I -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15" http://app.billeo.es'
+          
+          echo ""
+          echo "Testing direct IP access:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://15.237.210.247'
+          
+          echo ""
+          echo "Final nginx configuration:"
+          ssh $SSH_USER@$SERVER_IP 'sudo cat /etc/nginx/sites-available/default' 

@@ -1,0 +1,78 @@
+name: Deploy PWA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-pwa:
+    name: Deploy Billeo PWA
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Build and deploy PWA
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== DEPLOYING BILLEO PWA ==="
+          
+          # Upload PWA files
+          echo "Uploading PWA files..."
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/
+          scp client/index.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/
+          scp client/src/main.tsx $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/src/
+          
+          # Rebuild frontend with PWA support
+          ssh $SSH_USER@$SERVER_IP 'cd /home/$SSH_USER/app/client && npm run build'
+          
+          # Restart PM2 to pick up changes
+          ssh $SSH_USER@$SERVER_IP 'pm2 restart billeo-new'
+          
+          echo "PWA deployment completed!"
+
+      - name: Verify PWA deployment
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING PWA DEPLOYMENT ==="
+          
+          # Check if PWA files are accessible
+          echo "Testing manifest.json:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/manifest.json'
+          
+          echo ""
+          echo "Testing service worker:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/sw.js'
+          
+          echo ""
+          echo "Testing offline page:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/offline.html'
+          
+          echo ""
+          echo "Testing app icons:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/icon-192.png'
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/icon-512.png'
+          
+          echo ""
+          echo "✅ PWA deployment verification complete!"
+          echo ""
+          echo "🎉 ¡Tu app Billeo ya es una PWA!"
+          echo "📱 Los usuarios pueden instalarla desde:"
+          echo "   • iPhone/iPad: Safari → Compartir → Añadir a pantalla de inicio"
+          echo "   • Android: Chrome mostrará banner de instalación"
+          echo "   • Desktop: Icono de instalación en barra de direcciones" 
