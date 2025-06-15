@@ -55,8 +55,10 @@ jobs:
         run: |
           mkdir -p deploy-simple
           cp -r server deploy-simple/
+          cp -r shared deploy-simple/
           cp -r dist deploy-simple/
           cp package.json deploy-simple/
+          cp tsconfig.json deploy-simple/
           jq '.scripts.start = "tsx server/index.ts"' deploy-simple/package.json > deploy-simple/package.json.tmp
           mv deploy-simple/package.json.tmp deploy-simple/package.json
           echo "Package prepared"
