@@ -85,14 +85,19 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Step 1 - Stop PM2
+      - name: Step 1 - Stop and clean PM2
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          echo "=== Stopping PM2 ==="
-          ssh $SSH_USER@$SERVER_IP 'pm2 stop billeo || true'
-          echo "PM2 stopped successfully"
+          echo "=== Stopping and cleaning all PM2 processes ==="
+          ssh $SSH_USER@$SERVER_IP 'pm2 stop all || true'
+          ssh $SSH_USER@$SERVER_IP 'pm2 delete all || true'
+          ssh $SSH_USER@$SERVER_IP 'pm2 kill || true'
+          # Matar cualquier proceso en el puerto 3000
+          ssh $SSH_USER@$SERVER_IP 'sudo fuser -k 3000/tcp || true'
+          ssh $SSH_USER@$SERVER_IP 'pm2 status'
+          echo "PM2 cleaned successfully"
 
       - name: Step 2 - Deploy files
         env:
