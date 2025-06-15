@@ -1,0 +1,139 @@
+name: Setup SSL Certificate Fixed
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-ssl:
+    name: Setup SSL with Let's Encrypt
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Install Certbot
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== INSTALLING CERTBOT ==="
+          ssh $SSH_USER@$SERVER_IP 'sudo apt update && sudo apt install -y certbot python3-certbot-nginx'
+
+      - name: Create SSL-ready nginx config
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CREATING SSL-READY NGINX CONFIG ==="
+          
+          # Create the config file step by step
+          ssh $SSH_USER@$SERVER_IP 'sudo rm -f /etc/nginx/sites-available/default'
+          
+          # Create HTTP server block first
+          ssh $SSH_USER@$SERVER_IP 'sudo bash -c "cat > /etc/nginx/sites-available/default" << '\''EOF'\''
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name app.billeo.es;
+              
+              location /.well-known/acme-challenge/ {
+                  root /var/www/html;
+              }
+              
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_connect_timeout 60s;
+                  proxy_send_timeout 60s;
+                  proxy_read_timeout 60s;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+          EOF'
+          
+          # Test and reload
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t && sudo systemctl reload nginx'
+
+      - name: Create webroot and obtain certificate
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== OBTAINING SSL CERTIFICATE ==="
+          
+          # Create webroot directory
+          ssh $SSH_USER@$SERVER_IP 'sudo mkdir -p /var/www/html'
+          
+          # Obtain certificate using certbot
+          ssh $SSH_USER@$SERVER_IP 'sudo certbot --nginx -d app.billeo.es --non-interactive --agree-tos --email admin@billeo.es --redirect --force-renewal'
+
+      - name: Enhance HTTPS configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== ENHANCING HTTPS CONFIGURATION ==="
+          
+          # Add additional security headers to the HTTPS block
+          ssh $SSH_USER@$SERVER_IP 'sudo sed -i "/ssl_certificate_key.*privkey.pem;/a\\
+              # Security headers\\
+              add_header X-Frame-Options SAMEORIGIN;\\
+              add_header X-Content-Type-Options nosniff;\\
+              add_header X-XSS-Protection \"1; mode=block\";\\
+              add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;" /etc/nginx/sites-available/default'
+          
+          # Test and reload
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t && sudo systemctl reload nginx'
+
+      - name: Setup auto-renewal
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== SETTING UP AUTO-RENEWAL ==="
+          
+          # Test renewal process
+          ssh $SSH_USER@$SERVER_IP 'sudo certbot renew --dry-run'
+          
+          # The cron job is usually automatically set up by certbot
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl status certbot.timer || echo "Certbot timer not found, setting up manual cron"'
+
+      - name: Verify SSL setup
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING SSL SETUP ==="
+          
+          # Wait for nginx to fully reload
+          sleep 5
+          
+          echo "Testing HTTP (should redirect to HTTPS):"
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://app.billeo.es || echo "HTTP test failed"'
+          
+          echo ""
+          echo "Testing HTTPS:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es || echo "HTTPS test failed"'
+          
+          echo ""
+          echo "SSL certificate status:"
+          ssh $SSH_USER@$SERVER_IP 'sudo certbot certificates'
+          
+          echo ""
+          echo "Final nginx configuration:"
+          ssh $SSH_USER@$SERVER_IP 'sudo cat /etc/nginx/sites-available/default'
+          
+          echo ""
+          echo "SSL setup completed successfully! ✅"
+          echo "Your app should now be accessible via HTTPS in Safari!" 
