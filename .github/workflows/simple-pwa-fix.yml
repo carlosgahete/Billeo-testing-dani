@@ -1,0 +1,147 @@
+name: Simple PWA Fix
+
+on:
+  workflow_dispatch:
+
+jobs:
+  simple-fix:
+    name: Simple PWA Fix
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Upload PWA files to billeo-app
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== UPLOADING PWA FILES ==="
+          
+          # Create directories
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/$SSH_USER/billeo-app/dist'
+          
+          # Upload PWA files directly to dist
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          
+          echo "Files uploaded successfully"
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo-app/dist/'
+
+      - name: Create nginx config file
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CREATING NGINX CONFIG ==="
+          
+          # Create config file locally first
+          cat > nginx-pwa.conf << 'EOF'
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name app.billeo.es;
+              return 301 https://$server_name$request_uri;
+          }
+          
+          server {
+              listen 443 ssl http2;
+              listen [::]:443 ssl http2;
+              server_name app.billeo.es;
+              
+              ssl_certificate /etc/letsencrypt/live/app.billeo.es/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/app.billeo.es/privkey.pem;
+              include /etc/letsencrypt/options-ssl-nginx.conf;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+              
+              add_header X-Frame-Options SAMEORIGIN;
+              add_header X-Content-Type-Options nosniff;
+              add_header X-XSS-Protection "1; mode=block";
+              add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+              
+              location = /manifest.json {
+                  root /home/****/billeo-app/dist;
+                  add_header Content-Type application/manifest+json;
+                  add_header Cache-Control "public, max-age=86400";
+              }
+              
+              location = /sw.js {
+                  root /home/****/billeo-app/dist;
+                  add_header Content-Type application/javascript;
+                  add_header Cache-Control "public, max-age=0";
+              }
+              
+              location = /offline.html {
+                  root /home/****/billeo-app/dist;
+                  add_header Content-Type text/html;
+              }
+              
+              location ~ ^/(icon-.*\.png|favicon\.png)$ {
+                  root /home/****/billeo-app/dist;
+                  add_header Content-Type image/png;
+                  add_header Cache-Control "public, max-age=31536000";
+              }
+              
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto https;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_connect_timeout 60s;
+                  proxy_send_timeout 60s;
+                  proxy_read_timeout 60s;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+          EOF
+          
+          # Replace placeholder with actual username
+          sed -i "s/****/\$SSH_USER/g" nginx-pwa.conf
+          
+          # Upload config file
+          scp nginx-pwa.conf $SSH_USER@$SERVER_IP:/tmp/
+          
+          # Install config
+          ssh $SSH_USER@$SERVER_IP 'sudo cp /tmp/nginx-pwa.conf /etc/nginx/sites-available/default'
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+
+      - name: Test PWA files
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== TESTING PWA FILES ==="
+          
+          sleep 5
+          
+          echo "Testing manifest.json:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/manifest.json | head -3 || echo "Failed"'
+          
+          echo ""
+          echo "Testing service worker:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/sw.js | head -1 || echo "Failed"'
+          
+          echo ""
+          echo "HTTP status codes:"
+          ssh $SSH_USER@$SERVER_IP 'curl -o /dev/null -s -w "manifest.json: %{http_code}\n" https://app.billeo.es/manifest.json'
+          ssh $SSH_USER@$SERVER_IP 'curl -o /dev/null -s -w "sw.js: %{http_code}\n" https://app.billeo.es/sw.js'
+          ssh $SSH_USER@$SERVER_IP 'curl -o /dev/null -s -w "icon-192.png: %{http_code}\n" https://app.billeo.es/icon-192.png'
+          
+          echo ""
+          echo "✅ PWA setup complete! Try accessing https://app.billeo.es from your phone to install the app!" 
