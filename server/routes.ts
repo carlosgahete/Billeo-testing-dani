@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { requireAuth, requireAdmin } from './auth-middleware';
 import { canEditInvoice } from './auth-roles';
 import testEmailRoutes from './test-email';
+import { hashPassword } from './auth'; // Importar la función de hash
 // Extiende el objeto Request para incluir las propiedades de sesión
 declare module "express-session" {
   interface SessionData {
@@ -606,8 +607,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "El nombre de usuario ya existe" });
       }
       
-      // Crear el usuario (la contraseña se encriptará en auth.ts)
-      const user = await storage.createUser(validatedData);
+      // ARREGLO: Encriptar la contraseña antes de crear el usuario
+      const hashedPassword = await hashPassword(validatedData.password);
+      const user = await storage.createUser({
+        ...validatedData,
+        password: hashedPassword,
+      });
       
       // Crear datos predeterminados para el nuevo usuario
       try {
@@ -1445,7 +1450,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessType
       };
       
-      const newUser = await storage.createUser(userData);
+      // ARREGLO: Encriptar la contraseña antes de crear el usuario
+      const hashedPassword = await hashPassword(userResult.data.password);
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+      });
       
       // Crear datos predeterminados para el nuevo usuario
       try {

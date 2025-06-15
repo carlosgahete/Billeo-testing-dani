@@ -1,0 +1,195 @@
+name: Fix PWA Paths
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-paths:
+    name: Fix PWA File Paths
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Investigate file locations and fix
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== INVESTIGATING CURRENT FILE LOCATIONS ==="
+          
+          # Check all billeo directories
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo*/ 2>/dev/null || echo "No billeo directories at root level"'
+          
+          echo ""
+          echo "Looking for manifest.json files:"
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "manifest.json" 2>/dev/null || echo "No manifest.json found"'
+          
+          echo ""
+          echo "Looking for sw.js files:"
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "sw.js" 2>/dev/null || echo "No sw.js found"'
+          
+          echo ""
+          echo "Checking billeo-app structure:"
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo-app/ 2>/dev/null'
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo-app/client/ 2>/dev/null || echo "No client dir in billeo-app"'
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo-app/client/public/ 2>/dev/null || echo "No public dir"'
+          ssh $SSH_USER@$SERVER_IP 'ls -la /home/$SSH_USER/billeo-app/dist/ 2>/dev/null || echo "No dist dir in billeo-app"'
+          
+          echo ""
+          echo "=== UPLOADING PWA FILES TO MULTIPLE LOCATIONS ==="
+          
+          # Create directories and upload to all possible locations
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/$SSH_USER/billeo-app/client/public'
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/$SSH_USER/billeo-app/dist'
+          ssh $SSH_USER@$SERVER_IP 'mkdir -p /home/$SSH_USER/app/client/public'
+          
+          # Upload to billeo-app/client/public
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/client/public/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/client/public/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/client/public/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/client/public/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/client/public/
+          
+          # Upload to billeo-app/dist
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/billeo-app/dist/
+          
+          # Upload to app/client/public
+          scp client/public/manifest.json $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/ 2>/dev/null || echo "Could not upload to app/client/public"
+          scp client/public/sw.js $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/ 2>/dev/null || echo "Could not upload to app/client/public"
+          scp client/public/offline.html $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/ 2>/dev/null || echo "Could not upload to app/client/public"
+          scp client/public/icon-192.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/ 2>/dev/null || echo "Could not upload to app/client/public"
+          scp client/public/icon-512.png $SSH_USER@$SERVER_IP:/home/$SSH_USER/app/client/public/ 2>/dev/null || echo "Could not upload to app/client/public"
+
+      - name: Configure nginx with correct paths
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CONFIGURING NGINX WITH CORRECT PATHS ==="
+          
+          # Find where manifest.json actually exists
+          MANIFEST_PATH=$(ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "manifest.json" | head -1')
+          echo "Found manifest at: $MANIFEST_PATH"
+          
+          if [ ! -z "$MANIFEST_PATH" ]; then
+            # Extract the directory path
+            PWA_DIR=$(dirname "$MANIFEST_PATH")
+            echo "PWA files directory: $PWA_DIR"
+            
+            # Configure nginx with the correct path
+            ssh $SSH_USER@$SERVER_IP "sudo tee /etc/nginx/sites-available/default > /dev/null << EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name app.billeo.es;
+    return 301 https://\\\$server_name\\\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name app.billeo.es;
+    
+    # SSL configuration
+    ssl_certificate /etc/letsencrypt/live/app.billeo.es/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/app.billeo.es/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    
+    # Security headers
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection \"1; mode=block\";
+    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;
+    
+    # PWA specific files with correct paths
+    location = /manifest.json {
+        alias $PWA_DIR/manifest.json;
+        add_header Content-Type application/manifest+json;
+        add_header Cache-Control \"public, max-age=86400\";
+    }
+    
+    location = /sw.js {
+        alias $PWA_DIR/sw.js;
+        add_header Content-Type application/javascript;
+        add_header Cache-Control \"public, max-age=0\";
+    }
+    
+    location = /offline.html {
+        alias $PWA_DIR/offline.html;
+        add_header Content-Type text/html;
+    }
+    
+    location ~ ^/(icon-.*\.png|favicon\.png)$ {
+        root $PWA_DIR;
+        add_header Content-Type image/png;
+        add_header Cache-Control \"public, max-age=31536000\";
+    }
+    
+    # Main app proxy
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection \"upgrade\";
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_cache_bypass \\\$http_upgrade;
+    }
+}
+EOF"
+          else
+            echo "No manifest.json found, using default billeo-app path"
+            PWA_DIR="/home/$SSH_USER/billeo-app/dist"
+          fi
+          
+          # Test and reload nginx
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+
+      - name: Final verification
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== FINAL VERIFICATION ==="
+          
+          sleep 5
+          
+          echo "Files on server:"
+          ssh $SSH_USER@$SERVER_IP 'find /home/$SSH_USER/ -name "manifest.json" -o -name "sw.js" | head -10'
+          
+          echo ""
+          echo "Testing PWA files:"
+          echo "manifest.json:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/manifest.json | head -2 || echo "Still failing"'
+          
+          echo ""
+          echo "sw.js:"
+          ssh $SSH_USER@$SERVER_IP 'curl -s https://app.billeo.es/sw.js | head -1 || echo "Still failing"'
+          
+          echo ""
+          echo "Testing HTTP status:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I https://app.billeo.es/manifest.json 2>/dev/null | grep "HTTP"'
+          
+          echo ""
+          echo "Current nginx config:"
+          ssh $SSH_USER@$SERVER_IP 'sudo grep -A 5 "location = /manifest.json" /etc/nginx/sites-available/default || echo "Config not found"' 

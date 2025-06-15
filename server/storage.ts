@@ -348,9 +348,11 @@ export class DatabaseStorage implements IStorage {
         `;
         
         // Crear usuario predeterminado
+        const { hashPassword } = await import('./auth');
+        const hashedPassword = await hashPassword("demo");
         await this.createUser({
           username: "demo",
-          password: "demo",
+          password: hashedPassword,
           name: "Ana García",
           email: "ana@example.com",
           role: "admin"
@@ -946,8 +948,8 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateInvoiceItem(id: number, itemData: Partial<InsertInvoiceItem>): Promise<InvoiceItem | undefined> {
-    const result = await db.update(invoiceItems).set(itemData).where(eq(invoiceItems.id, id)).returning();
+  async updateInvoiceItem(id: number, invoiceItem: Partial<InsertInvoiceItem>): Promise<InvoiceItem | undefined> {
+    const result = await db.update(invoiceItems).set(invoiceItem).where(eq(invoiceItems.id, id)).returning();
     return result[0];
   }
 
@@ -999,9 +1001,9 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateQuote(id: number, quoteData: Partial<InsertQuote>): Promise<Quote | undefined> {
+  async updateQuote(id: number, quote: Partial<InsertQuote>): Promise<Quote | undefined> {
     // Convertir valores numéricos a cadenas en caso de que existan en el quoteData
-    const formattedData = { ...quoteData };
+    const formattedData = { ...quote };
     
     if (typeof formattedData.subtotal === "number") {
       formattedData.subtotal = formattedData.subtotal.toString();
