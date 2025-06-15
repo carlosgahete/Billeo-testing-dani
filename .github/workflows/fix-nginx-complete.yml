@@ -1,0 +1,88 @@
+name: Fix Nginx Complete
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-nginx-complete:
+    name: Complete Nginx Fix
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Clean and fix nginx configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== CLEANING ALL NGINX CONFIGURATIONS ==="
+          
+          # Remove all existing site configurations
+          ssh $SSH_USER@$SERVER_IP 'sudo rm -f /etc/nginx/sites-enabled/*'
+          ssh $SSH_USER@$SERVER_IP 'sudo rm -f /etc/nginx/sites-available/default'
+          ssh $SSH_USER@$SERVER_IP 'sudo rm -f /etc/nginx/sites-available/app.billeo.es'
+          
+          # Create clean default configuration
+          ssh $SSH_USER@$SERVER_IP 'cat > /tmp/nginx-default << EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    
+    server_name _;
+    
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        
+        # Add timeout settings
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
+EOF'
+          
+          # Install the configuration
+          ssh $SSH_USER@$SERVER_IP 'sudo cp /tmp/nginx-default /etc/nginx/sites-available/default'
+          ssh $SSH_USER@$SERVER_IP 'sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'
+          
+          # Test and reload
+          ssh $SSH_USER@$SERVER_IP 'sudo nginx -t'
+          ssh $SSH_USER@$SERVER_IP 'sudo systemctl reload nginx'
+          
+          echo "=== NGINX CONFIGURATION CLEANED AND FIXED ==="
+
+      - name: Verify fix
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== VERIFYING FIX ==="
+          
+          # Wait a moment for nginx to reload
+          sleep 3
+          
+          # Test port 3000 (should work)
+          echo "Testing port 3000:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost:3000'
+          
+          echo ""
+          echo "Testing port 80:"
+          ssh $SSH_USER@$SERVER_IP 'curl -I http://localhost'
+          
+          echo ""
+          echo "Current nginx configuration:"
+          ssh $SSH_USER@$SERVER_IP 'sudo cat /etc/nginx/sites-available/default'
